@@ -1,0 +1,9 @@
+bin
+obj
+FixCustomGT2VOL
+
+*.suo
+*.ncb
+*.pdb
+*.user
+git-cmd.lnk
