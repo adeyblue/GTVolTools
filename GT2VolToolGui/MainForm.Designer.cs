@@ -40,6 +40,7 @@
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusText = new System.Windows.Forms.ToolStripStatusLabel();
             this.gt3VolToDir = new System.Windows.Forms.Button();
+            this.decompCheckBox = new System.Windows.Forms.CheckBox();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -93,7 +94,7 @@
             this.browseDirectoryButton.Name = "browseDirectoryButton";
             this.browseDirectoryButton.Size = new System.Drawing.Size(74, 25);
             this.browseDirectoryButton.TabIndex = 4;
-            this.browseDirectoryButton.Text = "Browse Dir";
+            this.browseDirectoryButton.Text = "Browse &Dir";
             this.browseDirectoryButton.UseVisualStyleBackColor = true;
             this.browseDirectoryButton.Click += new System.EventHandler(this.browseDirectoryButton_Click);
             // 
@@ -134,7 +135,7 @@
             // 
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusText});
-            this.statusStrip.Location = new System.Drawing.Point(0, 149);
+            this.statusStrip.Location = new System.Drawing.Point(0, 167);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(421, 22);
             this.statusStrip.SizingGrip = false;
@@ -157,11 +158,22 @@
             this.gt3VolToDir.UseVisualStyleBackColor = true;
             this.gt3VolToDir.Click += new System.EventHandler(this.gt3VolToDir_Click);
             // 
+            // decompCheckBox
+            // 
+            this.decompCheckBox.AutoSize = true;
+            this.decompCheckBox.Location = new System.Drawing.Point(14, 145);
+            this.decompCheckBox.Name = "decompCheckBox";
+            this.decompCheckBox.Size = new System.Drawing.Size(153, 17);
+            this.decompCheckBox.TabIndex = 11;
+            this.decompCheckBox.Text = "Decompress e&xtracted files";
+            this.decompCheckBox.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(421, 171);
+            this.ClientSize = new System.Drawing.Size(421, 189);
+            this.Controls.Add(this.decompCheckBox);
             this.Controls.Add(this.gt3VolToDir);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.gt2kVolToDir);
@@ -199,6 +211,7 @@
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel statusText;
         private System.Windows.Forms.Button gt3VolToDir;
+        private System.Windows.Forms.CheckBox decompCheckBox;
     }
 }
 

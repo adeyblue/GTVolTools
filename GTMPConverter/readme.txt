@@ -1,0 +1,1 @@
+This directory contains the code for a command line tool to convert PNG, JPG and BMP to both GTMP (background) and the pixel data part of GM (foreground) files. It doesn't create valid GM files on its own, those require GMCreator. The GM files created by this tool can be loaded by it.

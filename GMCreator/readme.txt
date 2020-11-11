@@ -1,0 +1,1 @@
+In here is the code for a GUI tool to edit and make new GT2 menu foregrounds (GM Files) as well a few tools for other things including making background images, and splitting and creating the archives that store fore and backgrounds.

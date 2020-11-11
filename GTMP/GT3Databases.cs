@@ -7,7 +7,7 @@ using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Core;
-//using GT2MultiEdit;
+using GT2MultiEdit;
 
 // This file parses out (un)known data from the various files in the database folder
 // of an exploded GT3 vol. These files are to GT3 what gtmode_data.dat is to GT2.
@@ -468,13 +468,13 @@ namespace GTMP
                         ulong unk5 = br.ReadUInt64(); // 0x50
                     }
 
-                    //CarEngineData ced = new CarEngineData();
-                    //ced.bandAcceleration = rpmVals;
-                    //ced.bandRPMs = hpVals;
-                    //ced.significantUnks = numGoodArrayVals;
-                    //ced.baseUnits = baseUnits;
-                    //uint realPS = DataParser.CalculateRealPS(ced, emptyUintArray, 0);
-                    //uint realHP = DataParser.PSToHp(realPS);
+                    CarEngineData ced = new CarEngineData();
+                    ced.bandAcceleration = rpmVals;
+                    ced.bandRPMs = hpVals;
+                    ced.significantUnks = numGoodArrayVals;
+                    ced.baseUnits = baseUnits;
+                    uint realPS = DataParser.CalculateRealPS(ced, emptyUintArray, 0);
+                    uint realHP = DataParser.PSToHp(realPS);
 
                     string engineDescStr = String.Format("{0} {1}", g_paramUnistrDB[engineDesc1], g_paramUnistrDB[engineDesc2]);
                     string aspStr = g_paramUnistrDB[aspirationDesc];
@@ -501,6 +501,8 @@ namespace GTMP
                     {
                         sw.Write(" {0:x}", rpmVals[k]);
                     }
+                    sw.WriteLine();
+                    sw.WriteLine("RealPS (GT2 Calc) - {0}, HP - {1}", realPS, realHP);
                     sw.WriteLine();
 
                     GT3CarInfo.Engine engine = new GTMP.GT3CarInfo.Engine();
@@ -2012,7 +2014,7 @@ namespace GTMP
                         {
                             realAsp = "None";
                         }
-                        uint hp = 0; // DataParser.PSToHp(inf.engine.listedPs);
+                        uint hp = DataParser.PSToHp(inf.engine.listedPs);
                         sw.WriteLine(
                             "{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}",
                             car.Key,

@@ -124,6 +124,18 @@ namespace GTMP
             return (0xFF << 24) | (resR << 16) | (resG << 8) | resB;
         }
 
+        internal static Color MakeColorFromBGR555(ushort colour)
+        {
+            int green = (colour & (0x1f << 5)) >> 5;
+            int blue = colour & 0x1f;
+            int red = (colour & (0x1f << 10)) >> 10;
+            const float mulFactor = (float)0xff / 0x1f;
+            green = (int)(green * mulFactor);
+            blue = (int)(blue * mulFactor);
+            red = (int)(red * mulFactor);
+            return Color.FromArgb(0xff, blue, green, red);
+        }
+
         static void PlotBitmap(BitmapData bmData, List<int> pixels, List<int> palette)
         {
             IntPtr pData = bmData.Scan0;
@@ -139,7 +151,7 @@ namespace GTMP
                 if (paletteIndex > paletteEntries)
                 {
                     Debug.WriteLine(String.Format("Found palette index of {0:x}, there are only {1:x} in the palette", paletteIndex, paletteEntries));
-                    paletteIndex = GTMPFile.MakeColorFromBGR555((ushort)paletteIndex).ToArgb();
+                    paletteIndex = MakeColorFromBGR555((ushort)paletteIndex).ToArgb();
                     justColour = true;
                 }
 

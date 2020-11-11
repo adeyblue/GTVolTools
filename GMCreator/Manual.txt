@@ -1,0 +1,609 @@
+﻿Contents:
+1) First Things First
+ - File Types
+2) Basic Operation
+3) The Menu Options
+4) The Box List
+5) The Box Property List
+6) The File Metadata List
+7) Other Useful Information
+ - How to get your screen into the game, from scratch
+ - How the game loads new information
+ - Box locations
+ - Limitation
+ - Resizing the window
+ - Changing hardcoded data
+ - The contents values
+
+**************************
+* 1) First Things First
+**************************
+
+File Types
+----------------
+GM Files - These are the files that define the foreground images and all the clickable areas on a menu screen. This tool will help you create and edit these. Everywhere GM files are mentioned, it means the files (whether compressed or not) that come out of VOL/gtmenu/<lang>/gtmenudat.dat, regardless of what you may have called them. I call them GM files because the file header is GM30
+
+GTMP Files - These are the files which contain the background and non-interactive portions of a menu screen. This tool can convert normal BMP, PNG, JPG images into these. Everywhere GTMP files are mentioned, it means the files that come out of VOL/gtmenu/commonpic.dat, regardless of what you may have called them. I call them GTMP files because the file header is GTMP.
+
+
+GM Files Are NOT The Same In All Versions
+--------------------
+If your GM file has any icon images in it (which most of them do), it may not display properly if you copy or export it for use in a different language/version. This includes, for example, loading and editing a PAL-English file and exporting it for use in the PAL-Italian GTMenuDat.dat.
+
+This is because the icons in the various iconimg.dat files are laid out in different orders and have different palette locations, and these details are saved in the GM files. Please change the version option in Settings before loading a file from a new version. Changing the version while editing a file may similarly require you to re-insert any icons you have placed.
+
+
+******************************
+* 2) Basic Operation
+******************************
+The black area is the canvas. Here you can draw new boxes and manipulate existing ones.
+
+To create a new box:
+Left click - Start drawing a new box
+ - Left click again - Finish drawing the new box
+ - Right click - Cancel drawing new box
+The Insert menu is used to insert the common icon images
+ 
+On an existing box:
+Left click and hold on the central gray square to move the box
+Left click and hold on a corner gray box to resize the box
+
+After selecting a box by clicking on its central anchor or from the box list, you can use the cursor keys on the keyboard to move the box.
+
+To change what is within a box, select it and change the Contents, BehaviourAttributes and QueryAttributes values in the box property list on the right. 
+
+Load a background and foreground picture using the File menu
+
+
+Drag & Drop
+------------------
+You can drag and drop files onto the canvas. Any files dropped are treated as loading a new foreground. You can't replace the background image by drag and drop.
+
+
+
+Hardcoded Contents
+--------------------
+The game shows the UsedCarList, GarageCarList and EquippedPartsList at a specific location no matter where or how big the box that supposedly contains them is. You cannot change where they render without changing the game code.
+
+Every box content that displays text renders the longest relevant text of that type. This means prices are all in Japanese units, the part name is from the EU version and some others will be from US version.
+
+*******************
+* The Menu Options
+*******************
+
+oooooooooooooooo
+o File Menu
+oooooooooooooooo
+
+New
+------------------------
+Deletes everything and resets the tool to the first opened state
+
+
+Load/Save GM Creator Project Files
+------------------------
+These are for use only with this tool. They contain any background and foreground image data, the boxes and the file metadata. Do not attempt to put these GMPROJ files into the game, they are not for use with GT2. To get a GT2 compatible file, use the 'Export GM File' menu option.
+
+
+Load Background Image
+-------------------------
+This loads a picture/game file into the canvas. The valid file types are:
+
+BMP, JPG, PNG, GTMP (zip/gzip or not compressed)
+
+These files must be 512x504 sized. To convert a background for use in the game, use the 'Tools->Convert Background to Image' menu option.
+
+
+Load Foreground Image
+-------------------------
+As above. The valid file types are:
+
+BMP, JPG, PNG, GM (zip/gzip or not compressed)
+
+These files must be also 512x504 in size.
+
+Foregrounds are the image data that will be included in the exported GM file. For BMP, JPG, or PNG files, a check is done as to whether the image can be successfully converted to a GT2 foreground file. To be a valid foreground file, after conversion to a 16-bit colour image, it must not use more than 32 groups of 16 colours. Also each 16x8 tile (a group of 128 pixels) must not use more than 1 of these groups of 16 colours. Tiles that are completely 1 colour or transparent don't count towards these numbers.
+
+If your image is too complex, you can try using fewer colours (e.g. by using dithering on your image) or moving more complex parts to a background image and having that part of the foreground be transparent.
+
+If a BMP, JPG or PNG foreground image has any transparency, it will be transparent in the canvas and in the game file when exported. Note that the game supports only on/off transparency, so any parts of the loaded image that aren't fully opague will be made fully transparent. Also note that any black pixels (RGB 000) in foreground images will be rendered as fully transparent both in this tool and by the game.
+
+You can also load a foreground by dragging and dropping a file of the allowed type onto the canvas.
+
+Loading a GM file will clear all current boxes and replace them with the ones defined in the file. Loading an image foreground will not replace the boxes.
+
+
+Export GM File
+------------------------
+This will create a foreground file for use in GT2 comprising of the foreground image you loaded, the boxes that have been drawn and the file metadata. These are the ones that live in gtmenu/<language>/gtmenudat.dat. Any background image loaded will need to be converted into a GTMP file separately using the 'Tools->Convert Background to Image' menu option.
+
+This option is also where the validation of the boxes happens. Invalid combinations of options and attributes, missed data and things that don't make logical sense will cause an error message.
+
+
+oooooooooooooo
+o Insert menu
+oooooooooooooo
+
+This menu contains all the Icon Images contained in IconImg.dat. Click in the relevant entry to insert the icon into the canvas. If this menu is empty when you click on it, wait a few seconds and try again. Note that this will only insert the background icon, to make it clickable you must draw a box over the top of it with the relevant properties
+
+ooooooooooooooo
+o Boxes menu
+ooooooooooooooo
+
+Clear All
+--------------------
+Removes all the drawn and inserted boxes. 
+
+
+Show Inner Content
+--------------------
+Toggleable master switch for rendering the internal contents of the boxes. 
+
+
+ooooooooooooooooo
+o Settings menu
+ooooooooooooooooo
+
+Shows the settings dialog.
+You can change the size and colour of the anchors, the default colour of the boxes and the selected box colour.
+
+You can also change the compression level of the exported GM file between 0 and 9. Higher numbers mean better compression (and smaller files) but may take longer to decompress, while lower numbers mean bigger files bit that shouldn't take as long to decompress. Comparing the file sizes, 9 seems to be approximately what the game uses.
+
+Picking the relevant version of the game for the GM files you are going to load/edit is required to get all the icon images to display properly both in the tool and when exported and loaded by the game. There is no support for editing the GM files of unused game languages. For instance, all the non-jpn languages in a JP version VOL, all the non usa languages in a US version VOL.
+
+oooooooooooooooo
+o Tools menu
+oooooooooooooooo
+
+Convert Image to GT2 Background
+--------------------------------
+This runs the GT2ImageConverter on a file you select to create a GTMP file
+
+
+Make CommonPic.dat
+-------------------------
+Creates a new CommonPic.dat/CommonPic.idx file pair. 
+The app will first look for files with a GTMP extension in the directory you pick. If less than 10 are found, the app will use all files in the folder. The files will be stored in the CommonPic.dat in either numerical order if the first file name contains any numbers, or in alphabetical order if the first file name doesn't contain any numbers. 
+
+For example, has numbers - numerical order:
+001Pic.gtm
+002Pic.gtm
+003Pic.gtm
+
+has numbers, numerical order
+B1.pic
+A02.pic
+Z3.pic
+
+has two sets of numbers, first number order
+001H9.pic
+002E5.pic
+003A1.pic
+
+No numbers, alphabetical order
+AmazingPic.gtm
+FirstPic.gtm
+NumberOne.gtm
+
+If there is a mix of files with numbers in the name and some not, the numbers will come first in numerical order, and the rest in alphabetical
+
+
+Make GTMenuDat.dat
+--------------------------
+This works the same as Make CommonPic.dat but looks for files with a GM extension first instead of GTMP first. Again, if less than 10 are found, all files in the directory are put into the archive. If the files in the directory are not GZIP compressed, they will be before addig to the dat file.
+
+
+Split CommonPic.dat
+---------------------------
+The reverse operation of the make. This takes a single commonpic.dat/commonpic.idx pair and explodes it into the constituent GTMP files. It will also convert the GTMP files into png files, so you can see what each one is without having to load them as a background in the tool. These will be in the 'pictures' subdirectory.
+
+
+Split GTMenuDat.dat
+---------------------------
+The reverse operation of the make. This takes a single gtmenudat.dat/gtmenudat.idx archive pair and explodes it into the constituent compressed GM files. It will also convert the GM files into png files, so you can tell what each one is without having to load them into the tool one-by-one. As this tool can load compressed GM files, it will not decompress the extracted GM files after splitting the GTMenuDat. If you need to decompress them for whatever reason, 7-zip can do it.
+
+
+
+**************************
+* 4) The Box List
+**************************
+This shows all currently defined boxes. Clicking on a box in the list will change the active box. The right click menu allows you create a copy of the selected box, or to delete it. You can also do these things using Ctrl-C on the keyboard to copy the selected box, and the Delete key to delete it.
+
+This list can be cleared and all boxes deleted by using the 'Boxes->Clear All Boxes' menu item. The list will also be cleared if you load a new foreground GM file.
+
+
+**************************
+* 5) The Box Property List
+**************************
+This shows you the properties of the selected box. You can change the selected box by either clicking on its central anchor or using the box list.
+
+Required properties:
+----------------------
+- Contents: What the box contains, does or renders. Mostly they are split into buttons, results, and information. There are 200 options. They're listed at the bottom of this file. 
+
+- Location: Where the box is on the screen. The numbers are Left, Top, Width ,Height. Click the + to be able to edit the values. You can also use the box anchors on the canvas to move and resize it 
+
+
+Optional Properties
+-----------------------
+- ArrowEnabler: If Contents is None, and QueryAttributes includes ShowArrowIf, getting this license will show a clickable arrow button at the location defined.
+
+- BehaviourAttributes:
+You can set none, one, or more of these to affect the behaviour of this box. Some combinations are not allowed
+* CanCursor - You can move the game's cursor to this box with the d-pad.
+* DefaultCursorPos - The game's cursor will go here by itself when loading this screen
+* RaceMode - This enables the use the QueryAttributes box to fill this box with various race or license specific information. A Race or License id is required to be set in RaceOrWheelOrCarId. If no QueryAttributes are set, this will start the race 
+* Fitwheel - This box will change the wheels on any CarDisplay content-box on this screen to the wheel id defined in RaceOrWheelOrCarId
+* DontRenderDealerPrice - If this box is a DealershipNewCarBox, it won't show the price underneath as normal
+* ShowRacePreview - Must be combined with RaceMode. When set, this button will show the race preview for the race in RaceOrWheelOrCarId instead of starting the race as a player.
+* UseBigFont - Any text rendered in this box will use the bigger font seen on the Game Status screen
+
+- LinkToScreen: If this box is a clickable type, clicking it will navigate to this foreground. The value is the index of the GM file in gtmenudat.dat. -1 means no link. FitWheel and RaceMode buttons may ignore this value, as they don't navigate
+
+- PrizeMoneyPosition: If the RaceMode BehaviourAttribute is set and the PrizeMoney QueryAttribute is also set, this is the race position to display prize money for. Must be between 1 and 6, or -1 for none
+
+- QueryAttributes:
+You can set none, one, or more of these to affect the behaviour of this box. Some combinations are not allowed. Apart from ShowArrowIf, these all require the RaceMode BehaviourAttribute to be set
+* None - When RaceMode is set, this button will start the race or race preview
+* ShowArrowIf - Conditionally show a clickable arrow depending on if the license in the ArrowEnabler property hss been acquired. Only works if box Content is None
+* LicenseRequiredGraphic: Displays the icon of the license required for this race
+* PowerRestriction: Displays the Power requirement for this race
+* PrizeMoney: Displays the credits you will receive for finishing in the position defined in PrizeMoneyPosition
+* RaceResult: Shows the best result achieved for this race, or blank if it hasn't been completed yet
+
+- RaceOrWheelOrCarId: The Race to query attributes for, the id of the Wheel to fit, or the Car to show the price of. As you can tell from the name, if one of these things is required by a Contents or Attribute, then attributes or Contents that require one of the other types cannot be set. For instance, a DealershipNewCarBox requires a car id, so it cannot be combined with the RaceMode or FitWheel BehaviourAttributes
+
+
+Non-Game Properties
+-------------------------
+These are things to help you differentiate and identify the drawn boxes. They are saved in GMProjects, but have no impact on the exported game files.
+
+- Name: A recognisable name that shows up the in box list
+- OutlineColour: The colour of the box's frame
+- ShowInnerContent: Disables or enables the drawing of this box's contents, leaving just the frame. Use the "Boxes->Show Inner Content" menu option to toggle it for all boxes at once.
+
+
+
+***************************
+* 6) The File Metadata List
+***************************
+This is extra data that applies to the whole file.
+
+Background Index
+--------------------
+Determines which background will be drawn with this foreground. The number is the index of the file in commonpic.dat. The first file being 0, the second being 1, etc
+
+
+BackLink
+---------------------
+The index of the GM file to go to in gtmenudat.dat if the player presses the Square or Triangle button on the controller while on this screen. Can be -1 to disable those buttons, or to enable BackLinkToPrevious
+
+
+BackLinkToPreviousScreen
+-----------------------
+If BackLink is -1 and this is True, Square & Triangle will go back to the previous screen entered, like the back button in a web browser. 
+
+
+ManufacturerId
+-----------------------
+This seems to be mainly for file grouping purposes EXCEPT when there is a DealershipTuneButton on the screen. In that case, you must be in a car from this manufacturer or the game will show the 'Your car cannot be tuned here' message when you click that button
+
+
+ScreenType
+------------------------
+Seems to be mainly informational, doesn't functionally change anything as far as I can tell.
+
+
+***************************
+7) Other Useful Information
+***************************
+
+How To Get Your Screen In The Game, From Scratch
+------------------------------------------------
+
+There's a video demonstration here - https://www.youtube.com/watch?v=rOiIYFYEkOY
+
+But if you prefer text:
+0) Create a copy of your Gran Turismo 2 ISO/bin
+1) Mount your original Gran Turismo 2 ISO, or extract the VOL from the ISO with 7Zip or similar
+2) Extract all the files from the VOL, using GTVolToolGui for instance
+3) Use GMCreator's Tools->Split GTMenuDat to extract all the GM Files from VolDir/gtmenu/<lang>/gtmenudat.dat. Extract them to a different directory than where the VOL files are
+4) Use GMCreator to edit the extracted screen(s) 
+5) File->Export your screen, overwrite the GM file to replace in the directory you extracted to in 3)
+6) Use GMCreator's Tools->Make GTMenuDat to combine all the files in the directory from 5)
+7) Copy the new GTMenuDat.dat & GTMenuDat.idx and overwrite the original ones in VolDir/gtmenu/<lang>/ from 2)
+8) Use GTVolToolGui to recombine all the VOL Files you extracted in 2) to a new VOL file
+9) Use IsoFileReplace to insert the new VOL file from 8) into the ISO/bin copy you created at 0). Type \GT2.VOL as the file to replace (include the slash)
+10) Run the copied iso in your favourite emulator
+
+
+
+How The Game Loads New Information
+------------------------
+Information for only one car, car upgrade, etc can be loaded at once. The active car is changed when you either click on one in the garage list, a used car list, or when you click a DealershipNewCarBox.  DealershipNewCarBoxes have a RaceOrWheelOrCarId defined, and this become the new active car.
+
+A different car part becomes active during tuning when its unique buy button is on a screen being loaded. This means while you can have a screen that lists multiple different upgrades for sale at once (as each part has a different buy button), it wouldn't be much good as any price info and car HP upgrade box can only show information about one part.
+
+
+Box Locations
+------------
+In the default game files, these are the extreme points of box location
+
+Left = 0
+Top = 37
+Right = 508
+Bottom = 452
+
+For info, 490 is the lowest vertical pixel rendered by Bizhawk. Anything between 491-504 won't be rendered, although the cursor can go down there.
+
+This tool won't let any part of any box go outside of the canvas bounds, although this is technically allowed by the game.
+
+
+Limitations
+----------------
+Icon image boxes are not resizeable, since they are fixed sized images defined in iconimg.dat(.gz)
+
+The fonts used to show inner content text are not the exact ones used by the game. I think they're mostly close enough without going out and trying every font ever though
+
+While every box in the game files validates as OK, this validation is from experimenting, not from looking at the game code. I have not tested every combination of the 200 different box contents, 7 info attributes and 5 query attributes in the game. Thus, it may be possible to create boxes with this tool that the game doesn't like or that don't work as you intended.
+
+All testing of this tool and GM files has happened using the US1.0 version.
+
+
+Resizing The Window
+----------------------
+The canvas is fixed to the game size of 512x504 no matter how you resize the window. You can otherwise resize the app window to make the property lists bigger and not require scrollbars.
+
+
+Changing Hardcoded Data
+-----------
+If anybody ever finds out how to change any hardcoded data, such as fonts, colours, locations, etc then this can be changed in this editor by modifying the hardcoded.json file. This file contains the screen locations and sizes of things like the used car and garage lists, how many cars they show, fonts, colours, where the hardcoded icon images are in iconimg.dat, etc.
+
+There are notes on code location of some things in US1.0 strewn around the GMImage.cs and MakeHardcodedDataFile.cs file
+
+
+The Contents Values
+-------------------------
+Please note the notes here are from where they are used by the game.
+They may or may not be dependent on BehaviourAttributes, QueryAtrributes
+and/or valid ScreenLink values to do or show what is described below
+
+
+	None = 0,
+    ClickButton = 1, // makes clickable button regardless of attrbutes?
+    YesBuyButton = 2, // the confirm buy button 
+    NoDontBuyButton = 3, // the reject buy button
+    PrePurchaseCarButton = 4, // the buy buttno that goes to the 'Purchase? Yes-No' screen
+
+    // show info for the current car in garage or dealership (width, height etc)
+    // clicking seems to have special peroperty of causing the game to remembering 
+    // which screen it came from so that triangle goes back to it
+    // regardless of whether the BackLink metadata of the linked screen or the BackLinkToPrevious flag
+    // are set
+    CarInfoButton = 5,
+    // the boxes you get after clicking New in a dealership.
+    // Prints the price of a car in black UNDERNEATH the box in the centre
+    // needs a car id passed in the extra data
+    // if a link is also present, that comes first before the car id
+    DealershipNewCarBox = 6,
+    CarColourName = 7, // The name of the car colour
+
+    GarageCarList = 9, // the list of cars in garage, hardcoded location
+    CarDisplay = 0xa, // the spinning car display (like in the garage and buying screens)
+    ExitToMainMenuButton = 0xb, // goes to the main menu when clicked (where Start Game, Load Game, Options are)
+
+    DoCarWashButton = 0xd, // Does a car wash
+
+    OKButton = 0x10, // The button on the 'you bought it' screen after buying a thing or in an error message screen
+    CarLogo = 0x11, // the big central car logo like in the purchase screen, centre aligned
+    ReturnToPreviousScreenButton = 0x12, // used for the back button on the garage car screen
+    CarFlavourTextButton = 0x13, // goes to the speech about each car
+
+    // Item Buy buttons - these are probably separate because their presence on a screen tells
+    // the price and hp upgrade info fields which part they should hold info about
+    ActiveStabilityControllerBuyButton = 0x14,
+    SportsBrakesBuyButton = 0x15,
+    BrakeBalanceControllerBuyButton = 0x16,
+    SingleClutchBuyButton = 0x17,
+    TwinClutchBuyButton = 0x18,
+    TripleClutchBuyButton = 0x19,
+    SportsRomBuyButton = 0x1a,
+    DisplacementIncreaseBuyButton = 0x1b,
+
+    EngineBalancingBuyButton = 0x1d,
+    SportsFlywheelBuyButton = 0x1e,
+    SemiRacingFlywheelBuyButton = 0x1f,
+    RacingFlywheelBuyButton = 0x20,
+    SportsTransmissionBuyButton = 0x21, // close transmission
+    SemiRacingTransmissionBuyButton = 0x22, // super close transmission
+    TransmissionFullCustomizeBuyButton = 0x23,
+    SportsIntercoolerBuyButton = 0x24,
+    RacingIntercoolerBuyButton = 0x25,
+    WeightReduction1BuyButton = 0x26,
+    WeightReduction2BuyButton = 0x27,
+    WeightReduction3BuyButton = 0x28,
+    LSD1WayBuyButton = 0x29,
+    LSD2WayBuyButton = 0x2a,
+    LSD15WayBuyButton = 0x2b,
+    LSDFullCustBuyButton = 0x2c,
+    YAWControlBuyButton = 0x2d,
+    SportsMufflerBuyButton = 0x2e,
+    SemiRacingMufflerBuyButton = 0x2f,
+    RacingMufflerBuyButton = 0x30,
+    NAStage1BuyButton = 0x31,
+    NAStage2BuyButton = 0x32,
+    NAStage3BuyButton = 0x33,
+    PortPolishBuyButton = 0x34,
+    DriveshaftBuyButton = 0x35,
+    RacingModificationBuyButton = 0x36,
+    SportsSuspensionBuyButton = 0x37,
+    SemiRacingSuspensionBuyButton = 0x38,
+    SuspensionFullCustomizationBuyButton = 0x39,
+    TractionControlBuyButton = 0x3a,
+    SportsTyresBuyButton = 0x3b,
+    RacingHardTyresBuyButton = 0x3c,
+    RacingMediumTyresBuyButton = 0x3d,
+    RacingSoftTyresBuyButton = 0x3e,
+    RacingSuperSoftTyresBuyButton = 0x3f,
+    SimulationTyresBuyButton = 0x40,
+    DirtTyresBuyButton = 0x41,
+    TurboStage1BuyButton = 0x42,
+    TurboStage2BuyButton = 0x43,
+    TurboStage3BuyButton = 0x44,
+    TurboStage4BuyButton = 0x45,
+
+    CurrentCarShortName = 0x47, // the active car's short name, the one used at the bottom of every screen
+    CurrentCarHP = 0x48, // orange, the car hp before the power upgrade is applied.
+    UpgradeCarHP = 0x49, // orange, what the car hp will be after the power upgrade is applied.
+    CarHP = 0x4a, // the HP shown on a garage or dealership screen
+
+    CarWeight = 0x4c, // the weight (kg/lbs) shown on a garage or dealership screen
+    CreditsBalance = 0x4d, // the credit number shown at the bottom of every screen
+    Price = 0x4e, // car/wheeel/upgrade etc, defaults to bottom right of box
+    DayCount = 0x4f, // the current game day, NUMBER ONLY, the Days text is a separate icon img
+    UsedCarList = 0x50, // The list of used cars, I don't think this explanation needed to be written
+
+    // License test results, will show nothing, kids prize, or a coloured trophy
+    // note that you show these results with these box contents, rather than with
+    // a RaceMode BehaviourAttribute with a RaceResult QueryAttribute
+    IC1LicenseResult = 0x53,
+    IC2LicenseResult,
+    IC3LicenseResult,
+    IC4LicenseResult,
+    IC5LicenseResult,
+    IC6LicenseResult,
+    IC7LicenseResult,
+    IC8LicenseResult,
+    IC9LicenseResult,
+    IC10LicenseResult,
+    // gap at 0x5d
+    B1LicenseResult = 0x5e,
+    B2LicenseResult,
+    B3LicenseResult,
+    B4LicenseResult,
+    B5LicenseResult,
+    B6LicenseResult,
+    B7LicenseResult,
+    B8LicenseResult,
+    B9LicenseResult,
+    B10LicenseResult,
+    // Gap at 0x68
+    A1LicenseResult = 0x69,
+    A2LicenseResult,
+    A3LicenseResult,
+    A4LicenseResult,
+    A5LicenseResult,
+    A6LicenseResult,
+    A7LicenseResult,
+    A8LicenseResult,
+    A9LicenseResult,
+    A10LicenseResult,
+    // gap at 0x73
+    IB1LicenseResult = 0x74,
+    IB2LicenseResult,
+    IB3LicenseResult,
+    IB4LicenseResult,
+    IB5LicenseResult,
+    IB6LicenseResult,
+    IB7LicenseResult,
+    IB8LicenseResult,
+    IB9LicenseResult,
+    IB10LicenseResult,
+    // gap at 0x7e
+    IA1LicenseResult = 0x7f,
+    IA2LicenseResult,
+    IA3LicenseResult,
+    IA4LicenseResult,
+    IA5LicenseResult,
+    IA6LicenseResult,
+    IA7LicenseResult,
+    IA8LicenseResult,
+    IA9LicenseResult,
+    IA10LicenseResult,
+    // gap at 0x89
+    S1LicenseResult = 0x8a,
+    S2LicenseResult,
+    S3LicenseResult,
+    S4LicenseResult,
+    S5LicenseResult,
+    S6LicenseResult,
+    S7LicenseResult,
+    S8LicenseResult,
+    S9LicenseResult,
+    S10LicenseResult,
+    CarColourSwatches = 0x94, // The small coloured rects that show the car colours when buying a new car
+
+    CarColourChangeButton = 0x96, // the button which changes the car's colours and cycles through the swatches
+    CarDrivetrainGraphic = 0x97, // The 4WD, FF, FR graphic. central, data for drawing these at 0x508d0 in US1.0 (5 structs of 0xc size, one for each graphic)
+    // Checks the car is the correct manufacturer before entering, which is why it's a special value (probably)
+    // the manufacturer ID is after all the box definitions and before the GMLL stuff
+    DealershipTuneButton = 0x98,
+
+    CarYear = 0x9a, // the model year in the dealership/garage
+    UpgradeName = 0x9b, // The name of the currently active car part / last part that you saw a Buy button for - Port & Polish, Racing Muffler etc
+    ShowRacingModificationButton = 0x9c, // The button that goes to the 'Buy Racing Modification' screen. Checks the car has one before entering the linked screen, or errors otherwise
+    ChangeModificationTypeButton = 0x9d, // changes the racing mod type. If car doesn't have an alternative racing mod, the entire box is rendered black and made unclickable and uncursorable
+
+    SellCarButton = 0xaa, // the button in the garage that sells the current car
+    GetInCarButton = 0xab, // the button in the garage that changes the car you're in
+
+    // these are items on the first screen/world map.
+    // No idea why they're special contents values
+    // they don't render anything nor seem to do anything special
+    WorldMapCarWashButton = 0xad,
+    WorldMapWheelShopButton = 0xae,
+    WorldMapGoRaceButton = 0xaf,
+    WorldMapLicensesButton = 0xb0,
+
+    // all the bits that make up the car info screen
+    // (the screen after you click the car button in the dealership/garage)
+    InfoScreenCarLength = 0xb2, // bottom left
+    InfoScreenCarHeight = 0xb3, // bottom left
+    InfoScreenCarWidth = 0xb4, // bottom left
+    InfoScreenCarWeight = 0xb5, // b l
+    InfoScreenCarEngineCapacity = 0xb6, // the displacement/CC value, b l
+    InfoScreenCarDrivetrain = 0xb7, // b l
+    InfoScreenCarEngineType = 0xb8, // I4 DOHC etc, b l
+    InfoScreenCarMaxPower = 0xb9, // 154hp / 6000rpm txt etc, b l
+    InfoScreenCarMaxTorque = 0xba, // 138.1lb-ft / 3500rpm txt etc, b l
+
+    // Bits of info on the Game Status screen
+    StatusPercentageCompletion = 0xbc, // b r
+    StatusTotalPrizeMoney = 0xbd, // b r
+    StatusTotalRaces = 0xbe, // b r
+    StatusTotalWins = 0xbf, // b r
+    StatusWinPercentage = 0xc0, // b r
+    StatusAvgRanking = 0xc1, // b r
+    StatusCarsOwned = 0xc2, // b r
+    StatusTotalCarValue = 0xc3, // b r
+    BestMaxSpeedTest = 0xc4, // (not used by the game, Formatted as FullCarName - 121.0mph etc. Only if have done a max speed test)
+
+    // This is car with the highest 2-byte value at 0x98 into the garage car data
+    // Top two bits are ignored (value & 0x3fff) (because they're flags) the rest of the 
+    // value is compared. 
+    // The car printed by this box is the car with the highest of these values
+    // It seems to be the PS power value of the cars. The HP Value printed by this is the this
+    // PS value mutiplied by 0.985 
+    HighestPoweredCarInGarage = 0xc5, // (not used by the game) 'Elise 190 184hp' etc, b r
+    Best400MTimeTrial = 0xc6, // (not used by the game, Formatted as FullCarName - 0'22.115 etc. Only if have done a 400m test)
+
+    // More bits ofrom the game status screen
+    StatusNumberOfLicenseGoldTrophies = 0xc8, // b r
+    StatusNumberOfLicenseSilverTrophies = 0xc9, // b r
+    StatusNumberOfLicenseBronzeTrophies = 0xca, // b r
+    StatusNumberOfLicenseKidsTrophies = 0xcb, // b r
+    StatusHighestGainedLicense = 0xcc,
+    // the hardcoded location that the parts list text strings use as the origin
+    // is in the instructions at 0x1C470 (the 0x20 (32) here is the x coord)
+    // and 0x1C478 (the 0xA0 (160) is the y coord) (US1.0)
+    // positions of each item at 0x50a34 in US1.0, 8 byte structs
+    // {
+    //    ushort upgradeIndicator; (if the car has this upgrade, the text will be rendered, idk if its a bit indicator or index)
+    //    ushort textStringToRender; // index
+    //    ushort xPos; // offset from the origin (so 0 would be 32 on the screen)
+    //    ushort yPos; // offset from the origin (so 0 would be 160 on the screen)
+    // }
+    CarEquippedPartsList = 0xcd, // the Equipped Car Parts list, hardcoded screen location
+
+    ChampionshipBonusPrize = 0xcf, // Displays the championship bonus of the championship named in the extradata
+    CarSaleValue = 0xd0, // The sale price of the car listed in the garage

@@ -28,7 +28,7 @@ namespace GT2VolToolGui
                 ofd.CheckFileExists = false;
                 ofd.CheckPathExists = true;
                 ofd.DefaultExt = "VOL";
-                ofd.Title = "Open GT2(K).VOL File...";
+                ofd.Title = "Open GT2(K)/3.VOL File...";
                 ofd.Filter = "VOL Files (*.vol)|*.vol|All Files (*.*)|*.*";
                 ofd.FilterIndex = 0;
                 DialogResult dr = ofd.ShowDialog();
@@ -101,6 +101,7 @@ namespace GT2VolToolGui
         {
             public string volFile;
             public string dir;
+            public bool decompress;
         }
 
         private void volToDirButton_Click(object sender, EventArgs e)
@@ -109,6 +110,8 @@ namespace GT2VolToolGui
             ThreadArgs tArgs = new ThreadArgs();
             tArgs.dir = dirNameTextBox.Text;
             tArgs.volFile = volNameTextBox.Text;
+            tArgs.decompress = decompCheckBox.Checked;
+
             Thread t = new Thread(new ParameterizedThreadStart(ExplodeGT2Vol));
             t.SetApartmentState(ApartmentState.MTA);
             t.Start(tArgs);
@@ -301,7 +304,7 @@ namespace GT2VolToolGui
                     statusText.Text = "Exploding...";
                     vf.ParseToc(null);
                     gt2VolNotifyCalls = 0;
-                    vf.Explode(tArgs.dir, false, new GT2Vol.VolFile.ExplodeProgressCallback(GT2ExplodeCallback));
+                    vf.Explode(tArgs.dir, tArgs.decompress, new GT2Vol.VolFile.ExplodeProgressCallback(GT2ExplodeCallback));
                 }
             }
             catch (Exception ex)
@@ -324,7 +327,7 @@ namespace GT2VolToolGui
                 GT2Vol.GT3Vol vf = new GT2Vol.GT3Vol(file);
                 gt2VolNotifyCalls = 0;
                 statusText.Text = "Exploding...";
-                vf.Extract(tArgs.dir, false, new GT2Vol.VolFile.ExplodeProgressCallback(GT2ExplodeCallback));
+                vf.Extract(tArgs.dir, tArgs.decompress, new GT2Vol.VolFile.ExplodeProgressCallback(GT2ExplodeCallback));
             }
             catch (Exception ex)
             {

@@ -38,7 +38,14 @@ namespace GTMP
             //    bm.Save(@"C:\Users\Adrian\Downloads\GT2\Jap1.0Vol\gtmenu\eng\exploded\decomp\727.png", System.Drawing.Imaging.ImageFormat.Png);
             //}
             string dir = args[0];
-            GT3Tex.DumpTexDir(dir, dir + "\\pics");
+            //GMFile.DumpGMFile(Path.Combine(dir, "2942"), dir + "\\png");
+            //GTMPFile.DumpGTMPFile("T:\\gt2\\commonpic\\105.gtm", "T:\\build");
+            dir = @"C:\Users\Adrian\Downloads\A-GT2\us12-gm";
+            //GMFile.DumpGMFile(Path.Combine(dir, "2942.gm.decomp"), dir + "\\png");
+            GMFile.DumpGMDir(dir, dir + "\\png");
+            //GTMPFile.ExplodeCommonPic(@"C:\Users\Adrian\Downloads\GT2\US1.0\gtmenu\commonpic.dat", "T:\\gt2\\commonpic");
+            //GTMPFile.DumpGTMPDir("T:\\gt2\\commonpic", "T:\\gt2\\commonpic\\png");
+            //GT3Tex.DumpTexDir(dir, dir + "\\pics");
             return;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

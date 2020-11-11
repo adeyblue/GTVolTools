@@ -115,8 +115,6 @@ namespace GT2Vol
             for(; i < numFiles; ++i)
             {
                 EmbeddedFileInfo efi = new EmbeddedFileInfo();
-                // I don't know what this val is. The high byte is always 0x37
-                // and the rest of the bytes are the same for related files
                 efi.dateTime = src.ReadInt32();
                 int offsetIndex = src.ReadInt16();
                 byte flags = src.ReadByte();
