@@ -465,7 +465,7 @@ namespace GTMP
                     outFileName.Length = fileNameStart;
                     outFileName.Append(i.ToString() + ".gtmp");
                     AsyncWriteState aws = new AsyncWriteState();
-                    FileStream outFile = new FileStream(outFileName.ToString(), FileMode.Create, FileAccess.Write, FileShare.None, UInt16.MaxValue, true);
+                    FileStream outFile = new FileStream(outFileName.ToString(), FileMode.Create, FileAccess.ReadWrite, FileShare.None, UInt16.MaxValue, true);
                     aws.file = outFile;
                     aws.data = buffer;
                     aws.ops = opFlags;
@@ -484,25 +484,35 @@ namespace GTMP
             }
         }
 
-        private static void WriteComplete(IAsyncResult res)
+        private static void DumpImage(object o)
         {
-            AsyncWriteState aws = (AsyncWriteState)res.AsyncState;
+            AsyncWriteState aws = (AsyncWriteState)o;
             using (FileStream fs = aws.file)
+            using (Bitmap bm = Parse(fs))
             {
-                fs.EndWrite(res);
-                if ((aws.ops & SplitCommonPicArgs.OutputPngPicture) != 0)
+                if (bm != null)
                 {
-                    fs.Position = 0;
-                    using (Bitmap bm = Parse(fs))
-                    {
-                        if (bm != null)
-                        {
-                            bm.Save(aws.picFileName, ImageFormat.Png);
-                        }
-                    }
+                    bm.Save(aws.picFileName, ImageFormat.Png);
                 }
             }
             aws.completionCount.Increment();
+        }
+
+        private static void WriteComplete(IAsyncResult res)
+        {
+            AsyncWriteState aws = (AsyncWriteState)res.AsyncState;
+            FileStream fs = aws.file;
+            fs.EndWrite(res);
+            if ((aws.ops & SplitCommonPicArgs.OutputPngPicture) != 0)
+            {
+                fs.Position = 0;
+                System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(DumpImage), aws);
+            }
+            else
+            {
+                fs.Dispose();
+                aws.completionCount.Increment();
+            }
         }
     }
 }
