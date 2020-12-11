@@ -10,7 +10,7 @@ namespace GMCreator
 {
     static class Compress
     {
-        public static MemoryStream DecompressStream(Stream compStream)
+        public static MemoryStream CopyStream(Stream compStream)
         {
             byte[] buffer = new byte[65536];
             MemoryStream ms = new MemoryStream((int)(compStream.Length * 2));
@@ -23,13 +23,13 @@ namespace GMCreator
         {
             ZipInputStream zis = new ZipInputStream(compStream);
             ZipEntry ze = zis.GetNextEntry();
-            return DecompressStream(zis);
+            return CopyStream(zis);
         }
 
         public static MemoryStream GZipDecompress(Stream compStream)
         {
             GZipInputStream gis = new GZipInputStream(compStream);
-            return DecompressStream(gis);
+            return CopyStream(gis);
         }
 
         public static MemoryStream ZipCompressStream(Stream decompStream)
@@ -57,6 +57,32 @@ namespace GMCreator
                 StreamUtils.Copy(decompStream, gzos, buffer);
             }
             return ms;
+        }
+
+        public static MemoryStream DecompressStream(Stream decompStream)
+        {
+            byte[] headerBytes = new byte[4];
+            MemoryStream streamToUse = null;
+            int read = decompStream.Read(headerBytes, 0, headerBytes.Length);
+            decompStream.Position = 0;
+            if (read == headerBytes.Length)
+            {
+                // gzip compressed
+                if ((headerBytes[0] == 0x1f) && (headerBytes[1] == 0x8b) && (headerBytes[2] == 0x8))
+                {
+                    streamToUse = GZipDecompress(decompStream);
+                }
+                // zip
+                else if ((headerBytes[0] == 'P') && (headerBytes[1] == 'K'))
+                {
+                    streamToUse = ZipDecompress(decompStream);
+                }
+            }
+            if (streamToUse == null)
+            {
+                streamToUse = CopyStream(decompStream);
+            }
+            return streamToUse;
         }
 
         public static MemoryStream GZipCompressString(string decompStr)

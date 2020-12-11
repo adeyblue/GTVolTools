@@ -52,23 +52,13 @@ namespace GMCreator
             {
                 ;
             }
-            byte[] fileBytes = File.ReadAllBytes(fileName);
+            MemoryStream streamToUse;
+            using (FileStream fs = File.OpenRead(fileName))
+            {
+                streamToUse = Compress.DecompressStream(fs);
+            }
             byte[] headerBytes = new byte[4];
-            Array.Copy(fileBytes, headerBytes, 4);
-            MemoryStream ms = new MemoryStream(fileBytes);
-            Stream streamToUse = ms;
-            // if this is gzip compressed, decompress
-            if ((headerBytes[0] == 0x1f) && (headerBytes[1] == 0x8b) && (headerBytes[2] == 0x8))
-            {
-                streamToUse = Compress.GZipDecompress(ms);
-                streamToUse.Read(headerBytes, 0, headerBytes.Length);
-            }
-            // likewise if its a zip
-            else if ((headerBytes[0] == 'P') && (headerBytes[1] == 'K'))
-            {
-                streamToUse = Compress.ZipDecompress(ms);
-                streamToUse.Read(headerBytes, 0, headerBytes.Length);
-            }
+            streamToUse.Read(headerBytes, 0, headerBytes.Length);
             streamToUse.Position = 0;
             string header = Encoding.ASCII.GetString(headerBytes);
             if (header == "GTMP")
@@ -83,7 +73,7 @@ namespace GMCreator
             // also allow files that have been pre-converted by the GT2ImageConverter
             else if (header == "GMLL")
             {
-                Bitmap bm = GTMP.GMFile.ParseGMLLData(fileBytes, 0, null);
+                Bitmap bm = GTMP.GMFile.ParseGMLLData(streamToUse.ToArray(), 0, null);
                 return new ImageLoadResult(bm, ImageType.GMLL);
             }
             throw new InvalidDataException("File type not recognized");
@@ -190,8 +180,11 @@ namespace GMCreator
             byte[] gmFileData = null;
             try
             {
-                gmFileData = File.ReadAllBytes(gmllFileName);
-                gmFileData = TrimToGMLLData(gmFileData);
+                using (FileStream gmStream = File.OpenRead(gmllFileName))
+                {
+                    MemoryStream decompGMStream = Compress.DecompressStream(gmStream);
+                    gmFileData = TrimToGMLLData(decompGMStream.ToArray());
+                }
             }
             catch (Exception e)
             {
