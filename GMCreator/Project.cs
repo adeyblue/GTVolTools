@@ -62,6 +62,11 @@ namespace GMCreator
 #endif
             MemoryStream compProj = Compress.ZipCompressString(projectFile);
             File.WriteAllBytes(fileName, compProj.ToArray());
+            if (DebugLogger.DoDebugActions())
+            {
+                string projectCopy = Globals.MakeDebugSaveName(true, Path.GetFileName(fileName));
+                File.WriteAllBytes(projectCopy, compProj.ToArray());
+            }
         }
 
         public static bool Load(string fileName, out Bitmap bg, out Bitmap fg, out byte[] fgGMLL, out List<IBox> boxes, out GTMP.GMFile.GMMetadata metadata)
@@ -71,13 +76,15 @@ namespace GMCreator
             boxes = null;
             metadata = null;
             DebugLogger.Log("Project", "Loading file at {0}", fileName);
-            byte[] projectBytes = File.ReadAllBytes(fileName);
-            // compressed
-            if ((projectBytes[0] == 'P') && (projectBytes[1] == 'K'))
+            if (DebugLogger.DoDebugActions())
             {
-                MemoryStream ms = new MemoryStream(projectBytes);
-                ms = Compress.ZipDecompress(ms);
-                projectBytes = ms.ToArray();
+                string projectCopy = Globals.MakeDebugSaveName(true, Path.GetFileName(fileName));
+                File.Copy(fileName, projectCopy, true);
+            }
+            byte[] projectBytes;
+            using(FileStream fs = File.OpenRead(fileName))
+            {
+                projectBytes = Compress.DecompressStream(fs).ToArray();
             }
             string jsonText = Encoding.UTF8.GetString(projectBytes);
             GMSerializedProject projectData = Json.Parse<GMSerializedProject>(jsonText);
@@ -163,7 +170,15 @@ namespace GMCreator
             List<Box> bigBoxes;
             List<IconImgBox> icons;
             SeparateBoxes(boxes, out bigBoxes, out icons);
-
+            DebugLogger.Log(
+                "Project", 
+                "Exporting as GMFile to {0} with {1} boxes, {2} item boxes, metadata ({3}), and gmllData of {4} bytes",
+                fileName, 
+                bigBoxes.Count, 
+                icons.Count,
+                metadata.ToString(),
+                (gmllData == null) ? -1 : gmllData.Length
+            );
             // this can be possible is the user just starts drawing boxes and wants to export that
             // without loading an associated image
             if (gmllData == null)
@@ -172,7 +187,7 @@ namespace GMCreator
                 // 4 - int for number of positions
                 // 0 - position data length
                 // 32 * 16 * 2 = 32 palettes of 16 2-byte colour
-                // 4 - number of tiles
+                // 4 - int for number of tiles
                 // 0 - bytes of tile pixel data
                 gmllData = new byte[4 + 4 + 0 + (32 * 16 * 2) + 4 + 0];
                 Array.Copy(Encoding.ASCII.GetBytes("GMLL"), gmllData, 4);

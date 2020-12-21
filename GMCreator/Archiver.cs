@@ -65,6 +65,9 @@ namespace GMCreator
 
         private void WriteThread(object o)
         {
+#if TEST_AS_FRENCH
+            Tools.SetThreadToFrench();
+#endif
             int fileAlignment = (int)o;
             string idxFile = Path.ChangeExtension(archiveFile, ".idx");
             MemoryStream memoryIdx = new MemoryStream(4000 * 4);

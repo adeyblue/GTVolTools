@@ -28,6 +28,7 @@ namespace GMCreator
 
         static object g_lock = null;
         static StringBuilder g_logStringStream;
+        static TraceSwitch debugSwitch;
 
         internal static void Initialise()
         {
@@ -40,6 +41,8 @@ namespace GMCreator
             {
                 g_lock = new object();
             }
+            // to use this we need to do
+            debugSwitch = new TraceSwitch("GMCreatorDebug", "Outputs extra data and a log into a 'saved' directory next to GMCreator.exe");
             g_logStringStream = new StringBuilder(1024 * 1024);
             DumpEnvironment();
         }
@@ -77,6 +80,11 @@ namespace GMCreator
 #if FILE_LOGGING || DEBUG
             Debug.WriteLine(message, who);
 #endif
+        }
+
+        internal static bool DoDebugActions()
+        {
+            return debugSwitch.TraceError;
         }
     }
 }

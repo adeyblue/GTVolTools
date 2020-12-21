@@ -9,12 +9,6 @@ namespace IsoFileReplace
 {
     static class PsxMode2
     {
-        class RunThreadArgs
-        {
-            public ProcessStartInfo psi;
-            public MainForm statusWindow;
-        }
-
         static internal void Run(
             string psxMode2Exe,
             string isoFile, 
@@ -37,115 +31,40 @@ namespace IsoFileReplace
             psi.UseShellExecute = false;
             psi.RedirectStandardError = true;
             psi.RedirectStandardOutput = true;
-            RunThreadArgs rta = new RunThreadArgs();
-            rta.psi = psi;
-            rta.statusWindow = statusWindow;
-            ThreadPool.QueueUserWorkItem(new WaitCallback(RunProcess), rta);
+            Process proc = new Process();
+            proc.SynchronizingObject = statusWindow;
+            proc.StartInfo = psi;
+            proc.Exited += new EventHandler(PsxMode2Exited);
+            proc.EnableRaisingEvents = true;
+            UIUpdater updater = new UIUpdater(statusWindow);
+            proc.ErrorDataReceived += new DataReceivedEventHandler(updater.LineReceived);
+            proc.OutputDataReceived += new DataReceivedEventHandler(updater.LineReceived);
+            statusWindow.UpdateText("Process startng... (this may take a while)");
+            proc.Start();
+            proc.BeginErrorReadLine();
+            proc.BeginOutputReadLine();
         }
 
-        static private void RunProcess(object o)
+        static private void PsxMode2Exited(object sender, EventArgs e)
         {
-            RunThreadArgs rta = (RunThreadArgs)o;
-            ProcessStartInfo psi = rta.psi;
-            MainForm statusWindow = rta.statusWindow;
-            ProcessWithOutput.HandleRedirect outputRedirect = new ProcessWithOutput.HandleRedirect(AppendStatusLine);
-            statusWindow.UpdateText("Starting process...");
-            using (ProcessWithOutput pwo = new ProcessWithOutput(outputRedirect, outputRedirect))
-            {
-                pwo.StartInfo = psi;
-                pwo.Tag = statusWindow;
-                WaitHandle mre = pwo.GetExitEvent();
-                pwo.Start();
-                pwo.StartAsyncOps();
-                mre.WaitOne();
-            }
-            statusWindow.UpdateText("Finished");
-        }
-
-        static private void AppendStatusLine(ProcessWithOutput sender, string line)
-        {
-            MainForm statusWindow = (MainForm)sender.Tag;
-            statusWindow.UpdateText(line);
+            Process p = (Process)sender;
+            MainForm mf = (MainForm)p.SynchronizingObject;
+            mf.EnableOKButton();
+            p.Dispose();
         }
     }
 
-    class ProcessWithOutput : Process
+    class UIUpdater
     {
-        public delegate void HandleRedirect(ProcessWithOutput sender, string line);
-
-        public object Tag { get; set; }
-
-        private HandleRedirect outputRedirect;
-        private HandleRedirect errorRedirect;
-        private ManualResetEvent exitEvent;
-
-        public ProcessWithOutput()
-            : base()
+        private MainForm ui;
+        public UIUpdater(MainForm mainForm)
         {
-            Tag = null;
-            this.EnableRaisingEvents = true;
-            this.Exited += new EventHandler(ProcessWithOutput_Exited);
-            exitEvent = new ManualResetEvent(false);
-            this.ErrorDataReceived += new DataReceivedEventHandler(ErrorLineReceived);
-            this.OutputDataReceived += new DataReceivedEventHandler(OutputLineReceived);
+            ui = mainForm;
         }
 
-        public ProcessWithOutput(HandleRedirect outputRedirector, HandleRedirect errorRedirector)
-            : this()
+        public void LineReceived(object sender, DataReceivedEventArgs dataRecv)
         {
-            outputRedirect = outputRedirector;
-            errorRedirect = errorRedirector;
-        }
-
-        public void StartAsyncOps()
-        {
-            BeginOutputReadLine();
-            BeginErrorReadLine();
-        }
-
-        public WaitHandle GetExitEvent()
-        {
-            return exitEvent;
-        }
-
-        private void ForwardLine(HandleRedirect redirFunc, DataReceivedEventArgs args)
-        {
-            if (args.Data != null)
-            {
-                string line = args.Data.TrimEnd();
-                if (line.Length > 0)
-                {
-                    if (redirFunc != null)
-                    {
-                        redirFunc(this, line);
-                    }
-                }
-            }
-        }
-
-        private void OutputLineReceived(object sender, DataReceivedEventArgs args)
-        {
-            ForwardLine(outputRedirect, args);
-        }
-
-        private void ErrorLineReceived(object sender, DataReceivedEventArgs args)
-        {
-            ForwardLine(errorRedirect, args);
-        }
-
-        private void ProcessWithOutput_Exited(object sender, EventArgs e)
-        {
-            exitEvent.Set();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-            if (exitEvent != null)
-            {
-                exitEvent.Close();
-                exitEvent = null;
-            }
+            ui.UpdateText(dataRecv.Data);
         }
     }
 }

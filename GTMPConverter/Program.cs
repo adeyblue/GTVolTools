@@ -1,12 +1,12 @@
-﻿using System;
+﻿//#define USE_32BIT_SOURCE
+// defining this will make the images load in 32bpp
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
-
-// defining this will make the images load in 32bpp
-// #define USE_32BIT_SOURCE
 
 namespace GTMPConverter
 {
@@ -50,7 +50,7 @@ namespace GTMPConverter
         static void DisplayError(string format, params object[] p)
         {
             ConsoleColor fgColour = Console.ForegroundColor;
-            Console.ForegroundColor = fgColour;
+            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(format, p);
             Console.ForegroundColor = fgColour;
         }
@@ -103,12 +103,13 @@ namespace GTMPConverter
                     }
                     Convert(profileToUse, sourceFile, args[1]);
                 }
+                Environment.ExitCode = 0;
             }
             catch (Exception e)
             {
                 PrintErrorAndExit("Conversion failed due to error: {0}", e.Message);
+                Environment.ExitCode = 2;
             }
-            Environment.ExitCode = 0;
         }
 
         static void Convert(IConverterProfile profile, Bitmap source, string outFile)
@@ -119,7 +120,7 @@ namespace GTMPConverter
             {
                 Rectangle lockRect = new Rectangle(Point.Empty, source.Size);
                 System.Drawing.Imaging.BitmapData sourceData = source.LockBits(lockRect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
-                Debug.Assert(sourceData.Stride == (sourceData.Width * 4);
+                Debug.Assert(sourceData.Stride == (sourceData.Width * 4));
                 System.Runtime.InteropServices.Marshal.Copy(sourceData.Scan0, originalPixels, 0, originalPixels.Length);
                 source.UnlockBits(sourceData);
             }
@@ -140,9 +141,11 @@ namespace GTMPConverter
             PixelBuffer convertedPixels = new PixelBuffer(profile.BitsPerPixel);
             ConvertAllTiles(originalPixels, convertedPixels, palettes, positions, profile);
             using(MemoryStream outputStream = new MemoryStream(50000))
-            using (BinaryWriter bw = new BinaryWriter(outputStream))
             {
-                profile.WriteFile(bw, positions, palettes, convertedPixels);
+                using (BinaryWriter bw = new BinaryWriter(outputStream))
+                {
+                    profile.WriteFile(bw, positions, palettes, convertedPixels);
+                }
                 File.WriteAllBytes(outFile, outputStream.ToArray());
             }
         }
@@ -184,9 +187,11 @@ namespace GTMPConverter
                         ++tiles;
                         int uniqueTileId;
                         // see if this slice already exists
-                        if(uniqueTiles.ContainsKey(slice))
+                        if (uniqueTiles.ContainsKey(slice))
                         {
                             TileInfo info = uniqueTiles[slice];
+                            ImageSlice dup = convertedTiles[info.tileIndex];
+                            Debug.Assert(AreArraysEqual(dup.rect, slice.rect), "In duplicate tile branch, but tiles aren't duplicates");
                             usedPalette = info.paletteId;
                             uniqueTileId = info.tileIndex;
                         }
@@ -203,8 +208,7 @@ namespace GTMPConverter
                         pd = new PositionData(
                             (byte)(x / PixelBuffer.TILE_WIDTH),
                             (byte)(y / PixelBuffer.TILE_HEIGHT),
-                            uniqueTileId,
-                            usedPalette
+                            profile.MakeTileAndPaletteValue(uniqueTileId, usedPalette)
                         );
                         positions.Add(pd);
                     }
@@ -217,18 +221,15 @@ namespace GTMPConverter
 #endif
                         pd = new PositionData(
                             (byte)(x / PixelBuffer.TILE_WIDTH),
-                            (byte)(y / PixelBuffer.TILE_HEIGHT),
-                            singleColour
-                        );
+                            (byte)(y / PixelBuffer.TILE_HEIGHT)
+                        ).SetSolidColour(singleColour);
                         positions.Add(pd);
                     }
                     // else this is a tile containing only black and/or transparent colours
                     // and the converter profile said it shouldn't be included in the image file
                 }
             }
-#if DEBUG
             Console.WriteLine("Total tiles: {0}, unique tiles: {1}", tiles, convertedTiles.Count);
-#endif
         }
 
 #if USE_32BIT_SOURCE
@@ -247,6 +248,21 @@ namespace GTMPConverter
                 startPos += PixelBuffer.CANVAS_WIDTH;
             }
             return tile;
+        }
+
+        internal static bool AreArraysEqual<T>(T[] ar1, T[] ar2)
+        {
+            int arLen = ar1.Length;
+            if (arLen != ar2.Length)
+            {
+                return false;
+            }
+            bool equal = true;
+            for (int i = 0; (i < arLen) && equal; ++i)
+            {
+                equal = (ar1[i].Equals(ar2[i]));
+            }
+            return equal;
         }
     }
 }

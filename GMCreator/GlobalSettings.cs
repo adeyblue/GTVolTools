@@ -66,6 +66,9 @@ namespace GMCreator
 
         private const string SETTINGS_FILE = "settings.json";
 
+        private static int g_fgImageCounter = 0;
+        private static string g_debugSaveDir;
+
         static public void Load(string fileDir)
         {
             string filePath = Path.Combine(fileDir, SETTINGS_FILE);
@@ -80,6 +83,11 @@ namespace GMCreator
                 App = new AppSettings();
             }
             App.RefreshNonSerialised();
+            if (DebugLogger.DoDebugActions())
+            {
+                g_debugSaveDir = Path.Combine(fileDir, "saved");
+                Directory.CreateDirectory(g_debugSaveDir);
+            }
         }
 
         static public void Save(string fileDir, Rectangle windowBounds)
@@ -95,6 +103,20 @@ namespace GMCreator
             {
                 DebugLogger.Log("Settings", "Caught exception {0} saving settings file to {1}", e.Message, filePath);
             }
+        }
+
+        internal static string MakeDebugSaveName(bool incrementNumber, string pattern, params object[] objs)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(g_debugSaveDir);
+            sb.Append(Path.DirectorySeparatorChar);
+            if (incrementNumber)
+            {
+                ++g_fgImageCounter;
+            }
+            sb.AppendFormat("{0}-", g_fgImageCounter);
+            sb.AppendFormat(pattern, objs);
+            return sb.ToString();
         }
     }
 }

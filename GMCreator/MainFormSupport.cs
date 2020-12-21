@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -143,9 +143,11 @@ namespace GMCreator
 
         private void LoadAndDisplaySelectedFile(string fileName, PostImageLoad afterLoadFn)
         {
+            DebugLogger.Log("Main", "Loading {0} with afterloader {1}...", fileName, afterLoadFn.Method.Name);
             try
             {
                 Images.ImageLoadResult imageload = Images.LoadFile(fileName);
+                DebugLogger.Log("Main", "...Image was a {0}", imageload.type.ToString());
                 Bitmap image = imageload.image;
                 if ((image.Width != CANVAS_WIDTH) || (image.Height != CANVAS_HEIGHT))
                 {
@@ -171,9 +173,23 @@ namespace GMCreator
         private void BGImageLoad(string fileName, Images.ImageLoadResult info)
         {
             Image origBG = canvas.BackgroundImage;
+            DebugLogger.Log("Main", "Loaded BG of type {0} from {1}", info.type.ToString(), fileName);
+            if (DebugLogger.DoDebugActions())
+            {
+                string newBGName = Globals.MakeDebugSaveName(true, Path.GetFileName(fileName));
+                File.Copy(fileName, newBGName, true);
+                string newConvertedBG = Globals.MakeDebugSaveName(false, "newconvertedbg.png");
+                info.image.Save(newConvertedBG, System.Drawing.Imaging.ImageFormat.Png);
+            }
             canvas.BackgroundImage = info.image;
             if(origBG != null)
             {
+                if (DebugLogger.DoDebugActions())
+                {
+
+                    string previousBG = Globals.MakeDebugSaveName(false, "previousbg.png");
+                    origBG.Save(previousBG, System.Drawing.Imaging.ImageFormat.Png);
+                }
                 origBG.Dispose();
             }
         }
@@ -231,12 +247,27 @@ namespace GMCreator
         private void ReplaceForegroundImage(byte[] foregroundGMLL, Bitmap image)
         {
             Image origFG = canvas.Image;
+            if (DebugLogger.DoDebugActions())
+            {
+                string origImageName = Globals.MakeDebugSaveName(false, "newFG.png");
+                image.Save(origImageName, System.Drawing.Imaging.ImageFormat.Png);
+            }
             // The game doesn't render any pixels that are completely black in the foreground image
             // so we make them transparent here so they don't show in out mock-up preview window
             Bitmap loadedWithTransparentBlack = Hardcoded.MakeBlackTransparentAndDispose(image);
+            if (DebugLogger.DoDebugActions())
+            {
+                string newImageName = Globals.MakeDebugSaveName(false, "newFGTrans.png");
+                loadedWithTransparentBlack.Save(newImageName, System.Drawing.Imaging.ImageFormat.Png);
+            }
             canvas.Image = loadedWithTransparentBlack;
             if (origFG != null)
             {
+                if (DebugLogger.DoDebugActions())
+                {
+                    string saveFile = Globals.MakeDebugSaveName(false, "origFG.png");
+                    origFG.Save(saveFile, System.Drawing.Imaging.ImageFormat.Png);
+                }
                 origFG.Dispose();
             }
             currentForegroundGMLLData = foregroundGMLL;
@@ -244,7 +275,11 @@ namespace GMCreator
 
         private void FGImageLoad(string fileName, Images.ImageLoadResult info)
         {
-            // this isn't a GMFile, check
+            if (DebugLogger.DoDebugActions())
+            {
+                string fgImageName = Globals.MakeDebugSaveName(true, Path.GetFileName(fileName));
+                File.Copy(fileName, fgImageName, true);
+            }
             if(info.type != Images.ImageType.GM)
             {
                 byte[] newForegroundData;
@@ -261,6 +296,12 @@ namespace GMCreator
                 {
                     newForegroundData = File.ReadAllBytes(fileName);
                 }
+                DebugLogger.Log("Main", "Got {0} bytes of non-GM GMLL data", newForegroundData.Length);
+                if (DebugLogger.DoDebugActions())
+                {
+                    string nonGMDataFile = Globals.MakeDebugSaveName(false, "{0}nongm-fg.gmll", Path.GetFileNameWithoutExtension(fileName));
+                    File.WriteAllBytes(nonGMDataFile, newForegroundData);
+                }
                 ReplaceForegroundImage(newForegroundData, info.image);
             }
             else // (info.type == Images.ImageType.GM)
@@ -273,6 +314,7 @@ namespace GMCreator
                 byte[] gmllData = Images.LoadGMLLData(fileName);
                 ReplaceForegroundImage(gmllData, info.image);
                 GTMP.GMFile.GMFileInfo fileInf = info.gmInfo;
+                DebugLogger.Log("Main", "Got {0} bytes of GM-GMLL data from {1}, file had {2} boxes", gmllData.Length, fileName, fileInf.Boxes == null ? -1 : fileInf.Boxes.Count);
                 if (fileInf.Boxes != null)
                 {
                     boxList.BeginUpdate();
@@ -736,10 +778,6 @@ namespace GMCreator
 
         private void recompressFiles_Click(object sender, EventArgs e)
         {
-		If you're compiling in DEBUG, you'll need to search the code for all the places
-            I hardcoded a path for things to save and load, like this here and during export
-		Searching the code for T:\ or File.WriteAllBytes should find a few of them
-
             string inDir = @"C:\Users\Adrian\Downloads\Fantavision (Japan)\T";
             string outDir = @"C:\Users\Adrian\Downloads\Fantavision (Japan)\recompressedGMs";
             using (WaitDlg dlg = new WaitDlg("Checking GM Files"))

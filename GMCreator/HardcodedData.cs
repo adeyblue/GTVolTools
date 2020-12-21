@@ -251,7 +251,7 @@ namespace GMCreator
             using (Graphics g = Graphics.FromImage(newImage))
             {
                 System.Drawing.Imaging.ImageAttributes ia = new System.Drawing.Imaging.ImageAttributes();
-                ia.SetColorKey(Color.Black, Color.Black);
+                ia.SetColorKey(makeTransparent, makeTransparent);
                 g.DrawImage(bm, new Rectangle(Point.Empty, newImage.Size), 0, 0, newImage.Width, newImage.Height, GraphicsUnit.Pixel, ia);
             }
             return newImage;

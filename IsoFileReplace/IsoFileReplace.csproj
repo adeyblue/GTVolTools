@@ -48,7 +48,6 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="PsxMode2.cs">
-      <SubType>Component</SubType>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

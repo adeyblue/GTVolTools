@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -51,6 +52,12 @@ namespace GMCreator
 #endif
         }
 
+        void SaveDebugLog(object sender, EventArgs e)
+        {
+            string debugFile = System.IO.Path.Combine(Application.StartupPath, "log.txt");
+            System.IO.File.WriteAllText(debugFile, DebugLogger.GetContents());
+        }
+
 #region "Form Events"
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -60,7 +67,21 @@ namespace GMCreator
             }
             else
             {
-                Globals.Save(Application.StartupPath, this.Bounds);
+                Rectangle winBounds;
+                if (WindowState == FormWindowState.Normal)
+                {
+                    winBounds = Bounds;
+                }
+                else
+                {
+                    winBounds = RestoreBounds;
+                }
+                Globals.Save(Application.StartupPath, winBounds);
+                if (DebugLogger.DoDebugActions())
+                {
+                    string debugFile = Globals.MakeDebugSaveName(true, "log.txt");
+                    System.IO.File.WriteAllText(debugFile, DebugLogger.GetContents());
+                }
             }
         }
 
@@ -113,12 +134,16 @@ namespace GMCreator
 #region "Menu Events"
         private void openBackgroundToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DebugLogger.Log("Main", "Opening background by menu");
             LoadAndDisplayFile(new PostImageLoad(BGImageLoad));
+            RedrawCanvas();
         }
 
         private void openForegroundToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DebugLogger.Log("Main", "Opening foreground by menu");
             LoadAndDisplayFile(new PostImageLoad(FGImageLoad));
+            RedrawCanvas();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -129,7 +154,8 @@ namespace GMCreator
         private void InsertBoxMenuItemClick(object sender, EventArgs e)
         {
             ToolStripMenuItem item = (ToolStripMenuItem)sender;
-            IconImgBox imb = new IconImgBox(item.Text, (int)item.Tag);
+            DebugLogger.Log("Main", "Adding icon {0} by menu", item.Text);
+            IconImgBox imb = new IconImgBox(item.Text.Replace("&", String.Empty), (int)item.Tag);
             allBoxes.Add(imb);
             imb.DisplayChanged += new BoxDisplayChange(BoxInvalidation);
             SetUnsavedChanges();
@@ -143,6 +169,7 @@ namespace GMCreator
             {
                 return;
             }
+            DebugLogger.Log("Main", "Clearing all boxes");
             allBoxes.Clear();
             Box.ResetIndexCount();
             RedrawCanvas();
@@ -153,6 +180,7 @@ namespace GMCreator
         {
             ToolStripMenuItem toggle = (ToolStripMenuItem)sender;
             Globals.App.ShowInnerContent = toggle.Checked;
+            DebugLogger.Log("Main", "Global inner content toggle to {0}", toggle.Checked);
             RedrawCanvas();
         }
 
@@ -227,7 +255,7 @@ namespace GMCreator
             {
                 GraphicsUnit unit = GraphicsUnit.Pixel;
                 canvas.DrawToBitmap(bm, Rectangle.Ceiling(bm.GetBounds(ref unit)));
-                bm.Save("T:\\GMBitmap.png", System.Drawing.Imaging.ImageFormat.Png);
+                bm.Save(Path.Combine(Application.StartupPath, "canvas.png"), System.Drawing.Imaging.ImageFormat.Png);
             }
         }
 #endif
@@ -288,6 +316,7 @@ namespace GMCreator
                     {
                         anchorClick = e.Location;
                         mouseState = MouseState.DrawSizingRect;
+                        DebugLogger.Log("Main", "Started drawing rectangle at {0}", anchorClick);
                     }
                 }
                 break;
@@ -300,10 +329,12 @@ namespace GMCreator
                         b.DisplayChanged += new BoxDisplayChange(BoxInvalidation);
                         ChangeSelectedBox(b);
                         SetUnsavedChanges();
+                        DebugLogger.Log("Main", "Drew rectangle at {0}", b.Location);
                     }
                     else
                     {
                         UpdateDirtyRect(e.Location);
+                        DebugLogger.Log("Main", "Reset rectangle drawing");
                     }
                     ResetToNormalCanvas();
                 }
@@ -376,6 +407,7 @@ namespace GMCreator
                 {
                     string loadedFile = files[0];
                     loadedFile = System.IO.Path.GetFullPath(loadedFile);
+                    DebugLogger.Log("Main", "Loading file {0} by drag and drop", loadedFile);
                     LoadAndDisplaySelectedFile(loadedFile, new PostImageLoad(FGImageLoad));
                 }
             }

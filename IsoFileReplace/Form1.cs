@@ -56,7 +56,7 @@ namespace IsoFileReplace
 
         private void selectIsoButton_Click(object sender, EventArgs e)
         {
-            string iso = GetOpenFileName(this, "Select ISO to Modify", "ISO/Bin files (*.iso, *.bin)|*.iso,*.bin|All Files (*.*)|*.*");
+            string iso = GetOpenFileName(this, "Select ISO to Modify", "ISO/Bin files (*.iso, *.bin)|*.iso;*.bin|All Files (*.*)|*.*");
             if (String.IsNullOrEmpty(iso))
             {
                 return;
@@ -99,16 +99,9 @@ namespace IsoFileReplace
                 MessageBox.Show("The Iso/bin and/or the new file don't exist!", "Iso File Replacer", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            try
-            {
-                startButton.Enabled = false;
-                outputText.Text = String.Empty;
-                PsxMode2.Run(psxMode2File, isoFile, newFile, replacementPath, this);
-            }
-            finally
-            {
-                startButton.Enabled = true;
-            }
+            outputText.Text = String.Empty;
+            startButton.Enabled = false;
+            PsxMode2.Run(psxMode2File, isoFile, newFile, replacementPath, this);
         }
 
         private void RealUpdateText(string text)
@@ -119,6 +112,11 @@ namespace IsoFileReplace
         public void UpdateText(string text)
         {
             BeginInvoke(new Action<string>(RealUpdateText), text);
+        }
+
+        public void EnableOKButton()
+        {
+            startButton.Enabled = true;
         }
     }
 }

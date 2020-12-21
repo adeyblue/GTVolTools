@@ -47,7 +47,7 @@ namespace GMCreator
                 sw.WriteLine("Debug Log:");
                 sw.WriteLine(DebugLogger.GetContents());
             }
-            MessageBox.Show(message, "LetMeAtIt", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(message, "GMCreator", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

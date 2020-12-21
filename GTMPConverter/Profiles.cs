@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -33,6 +34,8 @@ namespace GTMPConverter
         }
 
         void WriteFile(BinaryWriter bw, List<PositionData> positionData, PaletteList palettes, PixelBuffer pixels);
+
+        ushort MakeTileAndPaletteValue(int tileIndex, int paletteIndex);
     }
 
     internal class GTMPProfile : IConverterProfile
@@ -90,6 +93,13 @@ namespace GTMPConverter
             bw.BaseStream.Position = 0x4000;
             byte[] pixels = pixelBuffer.GetWrittenPixels();
             bw.Write(pixels, 0, pixels.Length);
+        }
+
+        public ushort MakeTileAndPaletteValue(int tileIndex, int paletteIndex)
+        {
+            Debug.Assert(((tileIndex >= 0) && (tileIndex < 0x1000)), "GTMP conversion got tile with index greater than 0x1000");
+            Debug.Assert(((paletteIndex >= 0) && (paletteIndex < NumPalettes)), "GTMP conversion got palette index greater than 16");
+            return (ushort)((tileIndex & 0x0fff) | ((paletteIndex & 0xF) << 12));
         }
     }
 
@@ -162,6 +172,13 @@ namespace GTMPConverter
             bw.Write(actualNumTiles);
             // finally the actual pixel data
             bw.Write(pixelData);
+        }
+
+        public ushort MakeTileAndPaletteValue(int tileIndex, int paletteIndex)
+        {
+            Debug.Assert(((tileIndex >= 0) && (tileIndex < 0x800)), "GM conversion got tile with index greater than 0x800");
+            Debug.Assert(((paletteIndex >= 0) && (paletteIndex < NumPalettes)), "GM conversion got palette index greater than 32");
+            return (ushort)((tileIndex & 0x07ff) | ((paletteIndex & 0x1F) << 11));
         }
     }
 

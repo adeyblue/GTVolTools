@@ -39,7 +39,7 @@ namespace GMCreator
                     p.WaitForExit();
                     if (!(success = (p.ExitCode == 0)))
                     {
-                        MainForm.DisplayMsgBox(MessageBoxButtons.OK, MessageBoxIcon.Error, "Conversion failed. GTMPConverter output was:{0}{1}", Environment.NewLine, output);
+                        MainForm.DisplayMsgBox(MessageBoxButtons.OK, MessageBoxIcon.Error, "Conversion failed. GT2ImagePConverter output was:{0}{1}", Environment.NewLine, output);
                     }
                 }
             }
@@ -234,6 +234,9 @@ namespace GMCreator
 
         private static void MergeThread(object o)
         {
+#if TEST_AS_FRENCH
+            Tools.SetThreadToFrench();
+#endif
             MergeThreadParams mtp = (MergeThreadParams)o;
             WaitDlg dlg = mtp.dlg;
             List<string> inFiles = mtp.files;
@@ -293,6 +296,9 @@ namespace GMCreator
 
         private static void SplitThread(object o)
         {
+#if TEST_AS_FRENCH
+            Tools.SetThreadToFrench();
+#endif
             SplitThreadParams stp = (SplitThreadParams)o;
             WaitDlg dlg = stp.dlg;
             Stopwatch sw = new Stopwatch();
@@ -325,5 +331,14 @@ namespace GMCreator
                 dlg.ShowDialog();
             }
         }
+
+#if TEST_AS_FRENCH
+        internal static void SetThreadToFrench()
+        {
+            Thread curThread = Thread.CurrentThread;
+            System.Globalization.CultureInfo fr = System.Globalization.CultureInfo.GetCultureInfo("FR-FR");
+            curThread.CurrentCulture = curThread.CurrentUICulture = fr;
+        }
+#endif
     }
 }

@@ -12,6 +12,9 @@ namespace GMCreator
         [STAThread]
         static void Main()
         {
+#if TEST_AS_FRENCH
+            Tools.SetThreadToFrench();
+#endif
             DebugLogger.Initialise();
             ExceptionFuncs.Initialise();
             Application.EnableVisualStyles();
