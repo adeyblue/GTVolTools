@@ -358,11 +358,18 @@ namespace GMCreator
                 // and disposes the images, but when we're reloading the foreground
                 // only, we should preserve the background, so lets do this
                 // rather than bool-ing it up just for this one case
-                Image bgBackup = (Image)canvasBgImage.Clone(); 
+                Image bgBackup = null;
+                if (canvasBgImage != null)
+                {
+                    bgBackup = (Image)canvasBgImage.Clone();
+                }
                 if (!CloseCurrentFile())
                 {
                     // didn't need it anyway
-                    bgBackup.Dispose();
+                    if (bgBackup != null)
+                    {
+                        bgBackup.Dispose();
+                    }
                     info.image.Dispose();
                     return;
                 }
