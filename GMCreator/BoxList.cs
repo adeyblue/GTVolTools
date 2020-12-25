@@ -14,11 +14,12 @@ namespace GMCreator
             Items = new BindingList<IBox>();
         }
 
-        public void Draw(Graphics g, Rectangle clipRect, Rectangle currentlyDrawing)
+        public void Draw(Graphics g, Rectangle clipRect, Rectangle currentlyDrawing, LayerStateManager.Layers layers)
         {
+            bool showBoxes = (layers != LayerStateManager.Layers.None);
             foreach (IBox b in Items)
             {
-                b.Draw(g, clipRect);
+                b.Draw(g, clipRect, showBoxes);
             }
             if (currentlyDrawing != Rectangle.Empty)
             {

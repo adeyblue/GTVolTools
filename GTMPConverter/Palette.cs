@@ -6,157 +6,6 @@ using System.Text;
 
 namespace GTMPConverter
 {
-    //class OrigPalette
-    //{
-    //    SortedList<int, int> extantColours;
-    //    Dictionary<int, ushort> palColours;
-    //    private int allowedColours;
-
-    //    public Palette(int id, int numColours)
-    //    {
-    //        allowedColours = numColours;
-    //        extantColours = new SortedList<int, int>(numColours);
-    //        palColours = new Dictionary<int, ushort>(numColours);
-    //        Id = id;
-    //    }
-
-    //    public int Id
-    //    {
-    //        get;
-    //        private set;
-    //    }
-
-    //    public ushort[] GetColours()
-    //    {
-    //        List<ushort> bgrCols = new List<ushort>(palColours.Values);
-    //        return bgrCols.ToArray();
-    //    }
-
-    //    public ImageSlice AddColours(int[] colours)
-    //    {
-    //        List<int> uniqueColours = RemoveDuplicateColours(colours);
-    //        Debug.Assert(uniqueColours.Count > 1);
-    //        RemoveExistingColours(uniqueColours);
-    //        int newColourIndex = palColours.Count;
-    //        foreach (int c in uniqueColours)
-    //        {
-    //            palColours.Add(c, ConvertPaletteColourToBGR555(c));
-    //            extantColours.Add(c, newColourIndex++);
-    //        }
-    //        return ColoursToPixels(colours);
-    //    }
-
-    //    public ImageSlice ColoursToPixels(int[] colours)
-    //    {
-    //        byte[] pixels = new byte[colours.Length];
-    //        Debug.Assert(palColours.Count <= allowedColours);
-    //        Debug.Assert(ContainsAllColours(colours));
-    //        for (int i = 0; i < colours.Length; ++i)
-    //        {
-    //            pixels[i] = (byte)extantColours[colours[i]];
-    //        }
-    //        return new ImageSlice(pixels);
-    //    }
-
-    //    private static List<int> RemoveDuplicateColours(int[] colours)
-    //    {
-    //        List<int> uniqueColours = new List<int>(colours);
-    //        uniqueColours.Sort();
-    //        for (int i = 1; i < uniqueColours.Count; ++i)
-    //        {
-    //            if (uniqueColours[i] == uniqueColours[i - 1])
-    //            {
-    //                uniqueColours.RemoveAt(i);
-    //                --i;
-    //            }
-    //        }
-    //        return uniqueColours;
-    //    }
-
-    //    private void RemoveExistingColours(List<int> colours)
-    //    {
-    //        for (int i = 0; i < colours.Count; ++i)
-    //        {
-    //            if (palColours.ContainsKey(colours[i]))
-    //            {
-    //                colours.RemoveAt(i);
-    //                --i;
-    //            }
-    //        }
-    //    }
-
-    //    public static bool AreAllSameColour(int[] colours)
-    //    {
-    //        return RemoveDuplicateColours(colours).Count == 1;
-    //    }
-
-    //    public static bool AreAllBlackOrTransparent(int[] colours)
-    //    {
-    //        int numColours = colours.Length;
-    //        for (int i = 0; i < numColours; ++i)
-    //        {
-    //            if (((colours[i] & 0xffffff) != 0) && (colours[i] != -1))
-    //            {
-    //                return false;
-    //            }
-    //        }
-    //        return true;
-    //    }
-
-    //    public static int CountUniqueColours(int[] colours)
-    //    {
-    //        List<int> unique = RemoveDuplicateColours(colours);
-    //        return unique.Count;
-    //    }
-
-    //    public bool CanAddColours(int[] colours)
-    //    {
-    //        List<int> uniqueColours = RemoveDuplicateColours(colours);
-    //        RemoveExistingColours(uniqueColours);
-    //        return (palColours.Count + uniqueColours.Count) < allowedColours;
-    //    }
-
-    //    private static ushort[] ConvertAllColoursToBGR555(int[] colours)
-    //    {
-    //        ushort[] converted = new ushort[colours.Length];
-    //        for (int i = 0; i < colours.Length; ++i)
-    //        {
-    //            converted[i] = ConvertPaletteColourToBGR555(colours[i]);
-    //        }
-    //        return converted;
-    //    }
-
-    //    private static void GetRGBComponents(int colour, out int r, out int g, out int b)
-    //    {
-    //        r = colour & 0xff;
-    //        g = (colour >> 8) & 0xff;
-    //        b = (colour >> 16) & 0xff;
-    //    }
-
-    //    private static ushort ConvertPaletteColourToBGR555(int colour)
-    //    {
-    //        // all the palette colours seem to have the high bit set,
-    //        // while the static colour tiles don't
-    //        return (ushort)((1 << 15) | ConvertColourToBGR555(colour));
-    //    }
-
-    //    public static ushort ConvertColourToBGR555(int colour)
-    //    {
-    //        const float mulFactor = 0x1f / (float)0xff;
-    //        int r, g, b;
-    //        GetRGBComponents(colour, out r, out g, out b);
-    //        g = ((int)(g * mulFactor)) & 0x1f;
-    //        b = ((int)(b * mulFactor)) & 0x1f;
-    //        r = ((int)(r * mulFactor)) & 0x1f;
-    //        return (ushort)(b | (g << 5) | (r << 10));
-    //    }
-
-    //    public bool ContainsAllColours(int[] colours)
-    //    {
-    //        return Array.TrueForAll(colours, palColours.ContainsKey);
-    //    }
-    //}
-
     class Palette
     {
         // colour - index
@@ -180,24 +29,18 @@ namespace GTMPConverter
             private set;
         }
 
-        public static ushort SwizzleColour(ushort colour)
-        {
-            //return colour;
-            int red = colour & 0x1f;
-            int green = (colour & (0x1f << 5));
-            int blue = (colour & (0x1f << 10));
-            int highBit = colour & 0x8000;
-            return (ushort)(highBit | (red << 10) | green | (blue >> 10));
-        }
-
+        /// <summary>
+        /// These colours need swizzling!!
+        /// </summary>
+        /// <returns>Unswizzled colours</returns>
         public ushort[] GetColours()
         {
-            return palColours.ConvertAll<ushort>(SwizzleColour).ToArray();
+            return palColours.ToArray();
         }
 
         public ImageSlice AddColours(int[] colours)
         {
-            ushort[] convertedColours = ConvertAllColoursToBGR555(colours);
+            ushort[] convertedColours = ConvertAllColoursToRGB555(colours);
             return AddColours(convertedColours);
         }
 
@@ -237,7 +80,7 @@ namespace GTMPConverter
 
         public ImageSlice ColoursToPixels(int[] colours)
         {
-            ushort[] convertedColours = ConvertAllColoursToBGR555(colours);
+            ushort[] convertedColours = ConvertAllColoursToRGB555(colours);
             return ColoursToPixels(convertedColours);
         }
 
@@ -293,7 +136,7 @@ namespace GTMPConverter
 
         public static bool AreAllSameColour(int[] colours)
         {
-            ushort[] convertedColours = ConvertAllColoursToBGR555(colours);
+            ushort[] convertedColours = ConvertAllColoursToRGB555(colours);
             return AreAllSameColour(convertedColours);
         }
 
@@ -323,7 +166,7 @@ namespace GTMPConverter
             for (int i = 0; i < numColours; ++i)
             {
                 // black is RGB 0,0,0, transparent is 0 alpha
-                if (((colours[i] & 0x7fff) != 0) && ((colours[i] >> 15) != 0))
+                if (((colours[i] & 0x7fff) != 0) || ((colours[i] >> 15) != 0))
                 {
                     return false;
                 }
@@ -333,7 +176,7 @@ namespace GTMPConverter
 
         public static int CountUniqueColours(int[] colours)
         {
-            ushort[] convertedColours = ConvertAllColoursToBGR555(colours);
+            ushort[] convertedColours = ConvertAllColoursToRGB555(colours);
             return CountUniqueColours(convertedColours);
         }
 
@@ -345,7 +188,7 @@ namespace GTMPConverter
 
         public bool CanAddColours(int[] colours)
         {
-            ushort[] convertedColours = ConvertAllColoursToBGR555(colours);
+            ushort[] convertedColours = ConvertAllColoursToRGB555(colours);
             return CanAddColours(convertedColours);
         }
 
@@ -356,12 +199,12 @@ namespace GTMPConverter
             return (palColours.Count + uniqueColours.Count) < allowedColours;
         }
 
-        private static ushort[] ConvertAllColoursToBGR555(int[] colours)
+        private static ushort[] ConvertAllColoursToRGB555(int[] colours)
         {
             ushort[] converted = new ushort[colours.Length];
             for (int i = 0; i < colours.Length; ++i)
             {
-                converted[i] = ConvertPaletteColourToBGR555(colours[i]);
+                converted[i] = ConvertColourToRGB555(colours[i]);
             }
             return converted;
         }
@@ -373,30 +216,25 @@ namespace GTMPConverter
             b = (colour >> 16) & 0xff;
         }
 
-        private static ushort ConvertPaletteColourToBGR555(int colour)
+        public static ushort ConvertColourToRGB555(int colour)
         {
-            // all the palette colours seem to have the high bit set,
-            // while the static colour tiles don't
-            return (ushort)((1 << 15) | ConvertColourToBGR555(colour));
-        }
-
-        public static ushort ConvertColourToBGR555(int colour)
-        {
-            //const float mulFactor = 0x1f / (float)0xff;
             int r, g, b;
             GetRGBComponents(colour, out r, out g, out b);
             b = ((int)((b * 0x1f) / (float)0xff)) & 0x1f;
             g = ((int)((g * 0x1f) / (float)0xff)) & 0x1f;
             r = ((int)((r * 0x1f) / (float)0xff)) & 0x1f;
-            //g = ((int)(g * mulFactor)) & 0x1f;
-            //b = ((int)(b * mulFactor)) & 0x1f;
-            //r = ((int)(r * mulFactor)) & 0x1f;
-            return (ushort)(b | (g << 5) | (r << 10));
+            ushort highBit;
+            if ((colour & 0xFF000000) == 0xFF000000)
+            {
+                highBit = 0x8000;
+            }
+            else highBit = 0;
+            return (ushort)(highBit | (r | (g << 5) | (b << 10)));
         }
 
         public bool ContainsAllColours(int[] colours)
         {
-            ushort[] convertedColours = ConvertAllColoursToBGR555(colours);
+            ushort[] convertedColours = ConvertAllColoursToRGB555(colours);
             return ContainsAllColours(convertedColours);
         }
 
@@ -492,14 +330,15 @@ namespace GTMPConverter
             {
                 // set the default palette to magenta
                 // this will show up in the image if any pixel
-                // has an out of vounds palette colour index
-                defaultPalette[p] = 0xf81F;
+                // has an out of bounds palette colour index
+                defaultPalette[p] = 0x7C1F;
             }
 #endif
             foreach (Palette p in palettes)
             {
                 Array.Copy(defaultPalette, paletteColours, defaultPalette.Length);
-                ushort[] bgrColours = p.GetColours();
+                ushort[] rgbColours = p.GetColours();
+                ushort[] bgrColours = Array.ConvertAll(rgbColours, new Converter<ushort, ushort>(convertProfile.SwizzlePaletteColour));
                 Array.Copy(bgrColours, 0, paletteColours, 0, bgrColours.Length);
                 Console.WriteLine("Palette {0}: {1} colours", i++, bgrColours.Length);
                 foreach (ushort c in paletteColours)

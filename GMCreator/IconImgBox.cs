@@ -157,7 +157,7 @@ namespace GMCreator
             stream.Write(img.Mod1);
         }
 
-        public override void Draw(Graphics g, Rectangle r)
+        public override void Draw(Graphics g, Rectangle r, bool drawOutline)
         {
             Rectangle bounds = Bounds;
             if (bounds.IntersectsWith(r))

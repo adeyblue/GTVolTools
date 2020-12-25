@@ -29,7 +29,7 @@ namespace GMCreator
         }
 
         abstract public void Serialize(System.IO.BinaryWriter stream);
-        abstract public void Draw(Graphics g, Rectangle r);
+        abstract public void Draw(Graphics g, Rectangle r, bool drawOutline);
         abstract public IBox Clone();
         abstract public void Move(Point delta);
         abstract public void Resize(BoxHitTest corner, Point delta);

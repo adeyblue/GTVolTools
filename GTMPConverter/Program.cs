@@ -215,9 +215,9 @@ namespace GTMPConverter
                     else if(usedPalette != PaletteList.DISCARD_TILE) // these are all the same colour
                     {
 #if USE_32BIT_SOURCE
-                        ushort singleColour = Palette.ConvertColourToBGR555(tile[0]);
+                        ushort singleColour = profile.SwizzleSolidColour(Palette.ConvertColourToRGB555(tile[0]));
 #else
-                        ushort singleColour = Palette.SwizzleColour(tile[0]);
+                        ushort singleColour = profile.SwizzleSolidColour(tile[0]);
 #endif
                         pd = new PositionData(
                             (byte)(x / PixelBuffer.TILE_WIDTH),

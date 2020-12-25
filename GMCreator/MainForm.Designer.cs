@@ -61,7 +61,11 @@
             this.insertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.boxesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.clearAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toggleContentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.layersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleBackgroundToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleForegroundToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleBoxesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleBoxContentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.convertImageToBackgroundToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -268,6 +272,7 @@
             this.fileToolStripMenuItem,
             this.insertToolStripMenuItem,
             this.boxesToolStripMenuItem,
+            this.layersToolStripMenuItem,
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem});
             this.mainMenu.Location = new System.Drawing.Point(0, 0);
@@ -391,8 +396,7 @@
             // boxesToolStripMenuItem
             // 
             this.boxesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.clearAllToolStripMenuItem,
-            this.toggleContentsToolStripMenuItem});
+            this.clearAllToolStripMenuItem});
             this.boxesToolStripMenuItem.Name = "boxesToolStripMenuItem";
             this.boxesToolStripMenuItem.Size = new System.Drawing.Size(49, 20);
             this.boxesToolStripMenuItem.Text = "&Boxes";
@@ -402,20 +406,57 @@
             this.clearAllToolStripMenuItem.Name = "clearAllToolStripMenuItem";
             this.clearAllToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift)
                         | System.Windows.Forms.Keys.X)));
-            this.clearAllToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.clearAllToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.clearAllToolStripMenuItem.Text = "&Clear All";
             this.clearAllToolStripMenuItem.Click += new System.EventHandler(this.clearAllToolStripMenuItem_Click);
             // 
-            // toggleContentsToolStripMenuItem
+            // layersToolStripMenuItem
             // 
-            this.toggleContentsToolStripMenuItem.Checked = true;
-            this.toggleContentsToolStripMenuItem.CheckOnClick = true;
-            this.toggleContentsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.toggleContentsToolStripMenuItem.Name = "toggleContentsToolStripMenuItem";
-            this.toggleContentsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
-            this.toggleContentsToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
-            this.toggleContentsToolStripMenuItem.Text = "&Show Inner Content";
-            this.toggleContentsToolStripMenuItem.Click += new System.EventHandler(this.toggleContentsToolStripMenuItem_Click);
+            this.layersToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toggleBackgroundToolStripMenuItem,
+            this.toggleForegroundToolStripMenuItem,
+            this.toggleBoxesToolStripMenuItem,
+            this.toggleBoxContentsToolStripMenuItem});
+            this.layersToolStripMenuItem.Name = "layersToolStripMenuItem";
+            this.layersToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
+            this.layersToolStripMenuItem.Text = "Layers";
+            // 
+            // toggleBackgroundToolStripMenuItem
+            // 
+            this.toggleBackgroundToolStripMenuItem.Checked = true;
+            this.toggleBackgroundToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toggleBackgroundToolStripMenuItem.Name = "toggleBackgroundToolStripMenuItem";
+            this.toggleBackgroundToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.toggleBackgroundToolStripMenuItem.Text = "Show Background";
+            this.toggleBackgroundToolStripMenuItem.Click += new System.EventHandler(this.toggleLayerStateMenuClick);
+            // 
+            // toggleForegroundToolStripMenuItem
+            // 
+            this.toggleForegroundToolStripMenuItem.Checked = true;
+            this.toggleForegroundToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toggleForegroundToolStripMenuItem.Name = "toggleForegroundToolStripMenuItem";
+            this.toggleForegroundToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.toggleForegroundToolStripMenuItem.Text = "Show Foreground";
+            this.toggleForegroundToolStripMenuItem.Click += new System.EventHandler(this.toggleLayerStateMenuClick);
+            // 
+            // toggleBoxesToolStripMenuItem
+            // 
+            this.toggleBoxesToolStripMenuItem.Checked = true;
+            this.toggleBoxesToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toggleBoxesToolStripMenuItem.Name = "toggleBoxesToolStripMenuItem";
+            this.toggleBoxesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.toggleBoxesToolStripMenuItem.Text = "Show Boxes";
+            this.toggleBoxesToolStripMenuItem.Click += new System.EventHandler(this.toggleLayerStateMenuClick);
+            // 
+            // toggleBoxContentsToolStripMenuItem
+            // 
+            this.toggleBoxContentsToolStripMenuItem.Checked = true;
+            this.toggleBoxContentsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.toggleBoxContentsToolStripMenuItem.Name = "toggleBoxContentsToolStripMenuItem";
+            this.toggleBoxContentsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.I)));
+            this.toggleBoxContentsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.toggleBoxContentsToolStripMenuItem.Text = "Show Box Contents";
+            this.toggleBoxContentsToolStripMenuItem.Click += new System.EventHandler(this.toggleBoxContentsToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -532,7 +573,6 @@
         private System.Windows.Forms.ToolStripMenuItem boxCopyMenuItem;
         private System.Windows.Forms.ToolStripMenuItem insertToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem boxDeleteMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem toggleContentsToolStripMenuItem;
         private System.Windows.Forms.SplitContainer propertyGridSplitContainer;
         private System.Windows.Forms.PropertyGrid metadataPropertyList;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
@@ -547,6 +587,11 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
         private System.Windows.Forms.TextBox canvasFocusTextBox;
+        private System.Windows.Forms.ToolStripMenuItem layersToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toggleForegroundToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toggleBackgroundToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toggleBoxesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toggleBoxContentsToolStripMenuItem;
 
     }
 }

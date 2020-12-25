@@ -68,6 +68,7 @@
     <Compile Include="Images.cs" />
     <Compile Include="Box.cs" />
     <Compile Include="Json.cs" />
+    <Compile Include="LayerState.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

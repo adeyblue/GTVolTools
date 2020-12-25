@@ -133,7 +133,7 @@ namespace GMCreator
         private void LoadAndDisplayFile(PostImageLoad afterLoadFn)
         {
             const string imageFilter = "Image Files (*.bmp, *.png, *.jpg)|*.bmp;*.png;*.jpg|GT2 Files (*.gtmp, *.gm, *.gz)|*.gtmp;*.gm;*.gz|All Files (*.*)|*.*";
-            string fileName = GetOpenFileName(this, "Open an image", imageFilter);
+            string fileName = GetOpenFileName(this, "Open an image", imageFilter, null);
             if (String.IsNullOrEmpty(fileName))
             {
                 return;
@@ -170,9 +170,62 @@ namespace GMCreator
             return MessageBox.Show(message, "GMCreator", buttons, icon);
         }
 
+        //private void BGImageLoad(string fileName, Images.ImageLoadResult info)
+        //{
+        //    Image origBG = canvas.BackgroundImage;
+        //    DebugLogger.Log("Main", "Loaded BG of type {0} from {1}", info.type.ToString(), fileName);
+        //    if (DebugLogger.DoDebugActions())
+        //    {
+        //        string newBGName = Globals.MakeDebugSaveName(true, Path.GetFileName(fileName));
+        //        File.Copy(fileName, newBGName, true);
+        //        string newConvertedBG = Globals.MakeDebugSaveName(false, "newconvertedbg.png");
+        //        info.image.Save(newConvertedBG, System.Drawing.Imaging.ImageFormat.Png);
+        //    }
+        //    canvas.BackgroundImage = info.image;
+        //    if(origBG != null)
+        //    {
+        //        if (DebugLogger.DoDebugActions())
+        //        {
+
+        //            string previousBG = Globals.MakeDebugSaveName(false, "previousbg.png");
+        //            origBG.Save(previousBG, System.Drawing.Imaging.ImageFormat.Png);
+        //        }
+        //        origBG.Dispose();
+        //    }
+        //}
+
+        private void RecompositeCanvasImage()
+        {
+            Bitmap bm = new Bitmap(CANVAS_WIDTH, CANVAS_HEIGHT, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            LayerStateManager.Layers fgbg = layerState.Query(LayerStateManager.Layers.Background | LayerStateManager.Layers.Foreground);
+            using (Graphics g = Graphics.FromImage(bm))
+            {
+                g.Clear(Color.Black);
+                if ((canvasBgImage != null) && ((fgbg & LayerStateManager.Layers.Background) != 0))
+                {
+                    g.DrawImage(canvasBgImage, Point.Empty);
+                }
+                if ((canvasFgImage != null) && ((fgbg & LayerStateManager.Layers.Foreground) != 0))
+                {
+                    g.DrawImage(canvasFgImage, Point.Empty);
+                }
+            }
+            if (DebugLogger.DoDebugActions())
+            {
+                string compositedName = Globals.MakeDebugSaveName(false, "newcanvas.png");
+                bm.Save(compositedName, System.Drawing.Imaging.ImageFormat.Png);
+            }
+            Image oldImage = canvas.Image;
+            canvas.Image = bm;
+            if (oldImage != null)
+            {
+                oldImage.Dispose();
+            }
+        }
+
         private void BGImageLoad(string fileName, Images.ImageLoadResult info)
         {
-            Image origBG = canvas.BackgroundImage;
+            Image origBG = canvasBgImage;
             DebugLogger.Log("Main", "Loaded BG of type {0} from {1}", info.type.ToString(), fileName);
             if (DebugLogger.DoDebugActions())
             {
@@ -181,12 +234,13 @@ namespace GMCreator
                 string newConvertedBG = Globals.MakeDebugSaveName(false, "newconvertedbg.png");
                 info.image.Save(newConvertedBG, System.Drawing.Imaging.ImageFormat.Png);
             }
-            canvas.BackgroundImage = info.image;
-            if(origBG != null)
+            layerState.On(LayerStateManager.Layers.Background);
+            canvasBgImage = info.image;
+            RecompositeCanvasImage();
+            if (origBG != null)
             {
                 if (DebugLogger.DoDebugActions())
                 {
-
                     string previousBG = Globals.MakeDebugSaveName(false, "previousbg.png");
                     origBG.Save(previousBG, System.Drawing.Imaging.ImageFormat.Png);
                 }
@@ -246,21 +300,14 @@ namespace GMCreator
 
         private void ReplaceForegroundImage(byte[] foregroundGMLL, Bitmap image)
         {
-            Image origFG = canvas.Image;
+            Image origFG = canvasFgImage;
             if (DebugLogger.DoDebugActions())
             {
                 string origImageName = Globals.MakeDebugSaveName(false, "newFG.png");
                 image.Save(origImageName, System.Drawing.Imaging.ImageFormat.Png);
             }
-            // The game doesn't render any pixels that are completely black in the foreground image
-            // so we make them transparent here so they don't show in out mock-up preview window
-            Bitmap loadedWithTransparentBlack = Hardcoded.MakeBlackTransparentAndDispose(image);
-            if (DebugLogger.DoDebugActions())
-            {
-                string newImageName = Globals.MakeDebugSaveName(false, "newFGTrans.png");
-                loadedWithTransparentBlack.Save(newImageName, System.Drawing.Imaging.ImageFormat.Png);
-            }
-            canvas.Image = loadedWithTransparentBlack;
+            canvasFgImage = image;
+            RecompositeCanvasImage();
             if (origFG != null)
             {
                 if (DebugLogger.DoDebugActions())
@@ -302,15 +349,25 @@ namespace GMCreator
                     string nonGMDataFile = Globals.MakeDebugSaveName(false, "{0}nongm-fg.gmll", Path.GetFileNameWithoutExtension(fileName));
                     File.WriteAllBytes(nonGMDataFile, newForegroundData);
                 }
+                layerState.On(LayerStateManager.Layers.Foreground);
                 ReplaceForegroundImage(newForegroundData, info.image);
             }
             else // (info.type == Images.ImageType.GM)
             {
+                // This is a hack since CloseCurrentFile() resets everything
+                // and disposes the images, but when we're reloading the foreground
+                // only, we should preserve the background, so lets do this
+                // rather than bool-ing it up just for this one case
+                Image bgBackup = (Image)canvasBgImage.Clone(); 
                 if (!CloseCurrentFile())
                 {
+                    // didn't need it anyway
+                    bgBackup.Dispose();
                     info.image.Dispose();
                     return;
                 }
+                canvasBgImage = bgBackup;
+                layerState.On(LayerStateManager.Layers.Foreground);
                 byte[] gmllData = Images.LoadGMLLData(fileName);
                 ReplaceForegroundImage(gmllData, info.image);
                 GTMP.GMFile.GMFileInfo fileInf = info.gmInfo;
@@ -524,7 +581,7 @@ namespace GMCreator
             string origFilename = fileName;
             if (String.IsNullOrEmpty(fileName))
             {
-                fileName = GetSaveFileName(this, "Save Project file", "GMCreator Project Files|*.gmproj");
+                fileName = GetSaveFileName(this, "Save Project file", "GMCreator Project Files|*.gmproj", null);
             }
             SaveChanges(fileName);
             ClearUnsavedChanges();
@@ -535,7 +592,7 @@ namespace GMCreator
             }
         }
 
-        public static string GetSaveFileName(IWin32Window parent, string title, string filter)
+        public static string GetSaveFileName(IWin32Window parent, string title, string filter, string startDir)
         {
             string fileName = null;
             using(SaveFileDialog sfd = new SaveFileDialog())
@@ -550,6 +607,10 @@ namespace GMCreator
                 }
                 sfd.Filter = filter;
                 sfd.FilterIndex = 0;
+                if (!String.IsNullOrEmpty(startDir))
+                {
+                    sfd.InitialDirectory = startDir;
+                }
                 if (sfd.ShowDialog(parent) == DialogResult.OK)
                 {
                     fileName = sfd.FileName;
@@ -558,7 +619,7 @@ namespace GMCreator
             return fileName;
         }
 
-        public static string GetOpenFileName(IWin32Window parent, string title, string filter)
+        public static string GetOpenFileName(IWin32Window parent, string title, string filter, string startDir)
         {
             string fileName = null;
             using (OpenFileDialog ofd = new OpenFileDialog())
@@ -573,6 +634,10 @@ namespace GMCreator
                 }
                 ofd.Filter = filter;
                 ofd.FilterIndex = 0;
+                if (!String.IsNullOrEmpty(startDir))
+                {
+                    ofd.InitialDirectory = startDir;
+                }
                 if (ofd.ShowDialog(parent) == DialogResult.OK)
                 {
                     fileName = ofd.FileName;
@@ -581,14 +646,18 @@ namespace GMCreator
             return fileName;
         }
 
-        public static string PickFolder(IWin32Window parent, string title)
+        public static string PickFolder(IWin32Window parent, string title, string startDir)
         {
             string folder = null;
             using (FolderBrowserDialog fbd = new FolderBrowserDialog())
             {
                 fbd.Description = title;
                 fbd.ShowNewFolderButton = true;
-                fbd.RootFolder = Environment.SpecialFolder.MyComputer;
+                fbd.RootFolder = Environment.SpecialFolder.Desktop;
+                if (!String.IsNullOrEmpty(startDir))
+                {
+                    fbd.SelectedPath = startDir;
+                }
                 if (fbd.ShowDialog() == DialogResult.OK)
                 {
                     folder = fbd.SelectedPath;
@@ -599,7 +668,7 @@ namespace GMCreator
 
         private void ProjectLoad()
         {
-            string fileName = GetOpenFileName(this, "Open Project file", "GMCreator Project Files|*.gmproj");
+            string fileName = GetOpenFileName(this, "Open Project file", "GMCreator Project Files|*.gmproj", null);
             if (String.IsNullOrEmpty(fileName))
             {
                 return;
@@ -659,9 +728,11 @@ namespace GMCreator
         {
             allBoxes.Clear();
             Box.ResetIndexCount();
-            Image fgImage = canvas.Image, bgImage = canvas.BackgroundImage;
-            canvas.Image = null;
-            canvas.BackgroundImage = null;
+            Image fgImage = canvasFgImage, bgImage = canvasBgImage;
+            Image canvasImage = canvas.Image;
+            canvasFgImage = null;
+            canvasBgImage = null;
+            RecompositeCanvasImage();
             if (bgImage != null)
             {
                 bgImage.Dispose();
@@ -681,7 +752,7 @@ namespace GMCreator
 
         private void ExportToGMFile()
         {
-            string outFileName = GetSaveFileName(this, "Save Foreground GM File", "GT2 GM File (*.gm)|*.gm|All Files (*.*)|*.*");
+            string outFileName = GetSaveFileName(this, "Save Foreground GM File", "GT2 GM File (*.gm)|*.gm|All Files (*.*)|*.*", null);
             if (String.IsNullOrEmpty(outFileName))
             {
                 return;

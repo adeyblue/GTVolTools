@@ -68,12 +68,12 @@ namespace GMCreator
 
         public static void ConvertImageToGTMP(IWin32Window parent)
         {
-            string inputFileName = MainForm.GetOpenFileName(parent, "Open Image To Convert", "Image Files (*.bmp, *.png, *.jpg)|*.bmp;*.png;*.jpg");
+            string inputFileName = MainForm.GetOpenFileName(parent, "Open Image To Convert", "Image Files (*.bmp, *.png, *.jpg)|*.bmp;*.png;*.jpg", null);
             if(String.IsNullOrEmpty(inputFileName))
             {
                 return;
             }
-            string outputFileName = MainForm.GetSaveFileName(parent, "Save Converted Image As...", "GT2 Background (*.gtmp)|*.gtmp|All Files (*.*)|*.*");
+            string outputFileName = MainForm.GetSaveFileName(parent, "Save Converted Image As...", "GT2 Background (*.gtmp)|*.gtmp|All Files (*.*)|*.*", Path.GetDirectoryName(inputFileName));
             if (String.IsNullOrEmpty(outputFileName))
             {
                 return;
@@ -86,12 +86,12 @@ namespace GMCreator
 
         public static void SplitCommonPic(IWin32Window parent)
         {
-            string inputFileName = MainForm.GetOpenFileName(parent, "Open CommonPic.dat", "CommonPic.dat (*.dat)|commonpic*.*|All Files (*.*)|*.*");
+            string inputFileName = MainForm.GetOpenFileName(parent, "Open CommonPic.dat", "CommonPic.dat (*.dat)|commonpic*.*|All Files (*.*)|*.*", null);
             if (String.IsNullOrEmpty(inputFileName))
             {
                 return;
             }
-            string outputFolder = MainForm.PickFolder(parent, "Pick directory to split to...");
+            string outputFolder = MainForm.PickFolder(parent, "Pick directory to split to...", Path.GetDirectoryName(inputFileName));
             if (String.IsNullOrEmpty(outputFolder))
             {
                 return;
@@ -105,12 +105,12 @@ namespace GMCreator
 
         public static void SplitGTMenuDat(IWin32Window parent)
         {
-            string inputFileName = MainForm.GetOpenFileName(parent, "Open GTMenuDat.dat", "GTMenuDat.dat (*.dat)|gtmenudat*.*|All Files (*.*)|*.*");
+            string inputFileName = MainForm.GetOpenFileName(parent, "Open GTMenuDat.dat", "GTMenuDat.dat (*.dat)|gtmenudat*.*|All Files (*.*)|*.*", null);
             if (String.IsNullOrEmpty(inputFileName))
             {
                 return;
             }
-            string outputFolder = MainForm.PickFolder(parent, "Pick directory to split to...");
+            string outputFolder = MainForm.PickFolder(parent, "Pick directory to split to...", Path.GetDirectoryName(inputFileName));
             if (String.IsNullOrEmpty(outputFolder))
             {
                 return;
@@ -161,12 +161,12 @@ namespace GMCreator
 
         public static void MakeCommonPic(IWin32Window parent)
         {
-            string inputFolder = MainForm.PickFolder(parent, "Pick directory to create CommonPic.dat from...");
+            string inputFolder = MainForm.PickFolder(parent, "Pick directory to create CommonPic.dat from...", null);
             if (String.IsNullOrEmpty(inputFolder))
             {
                 return;
             }
-            string outputFileName = MainForm.GetSaveFileName(parent, "Save CommonPic.dat", "CommonPic.dat (*.dat)|commonpic.dat|All Files (*.*)|*.*");
+            string outputFileName = MainForm.GetSaveFileName(parent, "Save CommonPic.dat", "CommonPic.dat (*.dat)|commonpic.dat|All Files (*.*)|*.*", Path.GetDirectoryName(inputFolder));
             if (String.IsNullOrEmpty(outputFileName))
             {
                 return;
@@ -186,12 +186,12 @@ namespace GMCreator
 
         public static void MakeGTMenuDat(IWin32Window parent)
         {
-            string inputFolder = MainForm.PickFolder(parent, "Pick directory to create GTMenuDat.dat from...");
+            string inputFolder = MainForm.PickFolder(parent, "Pick directory to create GTMenuDat.dat from...", null);
             if (String.IsNullOrEmpty(inputFolder))
             {
                 return;
             }
-            string outputFileName = MainForm.GetSaveFileName(parent, "Save GTMenuDat.dat", "GTMenuDat.dat (*.dat)|gtmenudat.dat|All Files (*.*)|*.*");
+            string outputFileName = MainForm.GetSaveFileName(parent, "Save GTMenuDat.dat", "GTMenuDat.dat (*.dat)|gtmenudat.dat|All Files (*.*)|*.*", Path.GetDirectoryName(inputFolder));
             if (String.IsNullOrEmpty(outputFileName))
             {
                 return;

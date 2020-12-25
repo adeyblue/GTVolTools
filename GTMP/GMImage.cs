@@ -48,35 +48,75 @@ namespace GTMP
     // }
     static class GMFile
     {
+        //private static List<ImageSlice> ParseSlices(byte[] imageData, int numTiles)
+        //{
+        //    // tiles are 16 x 8 but 4bpp, so each byte is 2 pixels, so 8x8 in bytes
+        //    // stride is always 512 bytes
+        //    List<ImageSlice> slices = new List<ImageSlice>();
+        //    int numBytes = imageData.Length;
+        //    const int stride = 256; // in bytes, not pixels
+        //    const int xTiles = stride / 8;
+        //    int yTiles = numBytes / stride / 8;
+        //    int curTiles = 0;
+        //    for (int yTile = 0; yTile < yTiles; ++yTile)
+        //    {
+        //        int yPos = yTile * 8;
+        //        for (int xTile = 0; (xTile < xTiles) && (curTiles < numTiles); xTile++, ++curTiles)
+        //        {
+        //            int xPos = xTile * 8; // also used as byte index
+        //            ImageSlice s = new ImageSlice();
+        //            for (int localIter = 0; localIter < (16 * 8); localIter += 2)
+        //            {
+        //                int localX = localIter % 16;
+        //                int localY = localIter / 16;
+        //                Debug.Assert((localY >= 0) && (localY < 8));
+        //                int yPixOffset = (yPos + localY) * stride;
+        //                byte twoPix = imageData[yPixOffset + xPos + (localX / 2)];
+        //                s.rect[((localY * 16) + localX) + 1] = (byte)((twoPix & 0xF0) >> 4);
+        //                s.rect[((localY * 16) + localX)] = (byte)(twoPix & 0xF);
+        //            }
+        //            slices.Add(s);
+        //        }
+        //    }
+        //    return slices;
+        //}
+
         private static List<ImageSlice> ParseSlices(byte[] imageData, int numTiles)
         {
             // tiles are 16 x 8 but 4bpp, so each byte is 2 pixels, so 8x8 in bytes
             // stride is always 512 bytes
             List<ImageSlice> slices = new List<ImageSlice>();
-            int numBytes = imageData.Length;
-            const int stride = 256; // in bytes, not pixels
-            const int xTiles = stride / 8;
-            int yTiles = numBytes / stride / 8;
-            int curTiles = 0;
-            for (int yTile = 0; yTile < yTiles; ++yTile)
+            const int stride = 512;
+            int xPixel = 0;
+            int yPixel = 0;
+
+            for (int i = 0; i < numTiles; ++i)
             {
-                int yPos = yTile * 8;
-                for (int xTile = 0; (xTile < xTiles) && (curTiles < numTiles); xTile++, ++curTiles)
+                if (xPixel == stride)
                 {
-                    int xPos = xTile * 8; // also used as byte index
-                    ImageSlice s = new ImageSlice();
-                    for (int localIter = 0; localIter < (16 * 8); localIter += 2)
-                    {
-                        int localX = localIter % 16;
-                        int localY = localIter / 16;
-                        Debug.Assert((localY >= 0) && (localY < 8));
-                        int yPixOffset = (yPos + localY) * stride;
-                        byte twoPix = imageData[yPixOffset + xPos + (localX / 2)];
-                        s.rect[((localY * 16) + localX) + 1] = (byte)((twoPix & 0xF0) >> 4);
-                        s.rect[((localY * 16) + localX)] = (byte)(twoPix & 0xF);
-                    }
-                    slices.Add(s);
+                    xPixel = 0;
+                    yPixel += 8;
                 }
+                byte[] tile = new byte[16 * 8];
+                int tileY = 0;
+                // +8 because there are 8 rows of 16 pixels per tile
+                for (int y = yPixel; y < (yPixel + 8); ++y, ++tileY)
+                {
+                    // (/ 2) because each byte represents 2 pixels
+                    int imageTileRow = ((y * stride) + xPixel) / 2;
+                    int tileX = 0;
+                    int tileRow = 16 * tileY;
+                    // we deal with pixels per byte, so x < 8 rather than < 16
+                    // and tileX += 2 for the same reason
+                    for (int x = 0; x < 8; ++x, tileX += 2)
+                    {
+                        byte twoPixels = imageData[imageTileRow + x];
+                        tile[tileRow + tileX] = (byte)(twoPixels & 0xf);
+                        tile[tileRow + tileX + 1] = (byte)((twoPixels >> 4) & 0xf);
+                    }
+                }
+                xPixel += 16;
+                slices.Add(new ImageSlice(tile));
             }
             return slices;
         }
@@ -122,7 +162,10 @@ namespace GTMP
                 }
                 else
                 {
-                    pd.tile = GT2.Palette.SwizzleColour(tileAndPal);
+                    pd.tile = GT2.Palette.GMSwizzleColour(tileAndPal);
+#if PRINT_PALETTES
+                    Console.WriteLine("Solid tile of colour {0:x}=>{1:x} at {2}x{3}", tileAndPal, pd.tile, pd.x, pd.y);
+#endif
                     pd.palette = 0xFF;
                 }
                 pdList.Add(pd);
@@ -130,76 +173,6 @@ namespace GTMP
             }
             return pdList;
         }
-
-        //private static void ArrangeSlices(Bitmap bm, List<ImageSlice> slices, List<GT2.Palette> palettes, List<GT2.PositionData> posData)
-        //{
-        //    Rectangle lockRect = new Rectangle(0, 0, bm.Width, bm.Height);
-        //    BitmapData bd = bm.LockBits(lockRect, ImageLockMode.WriteOnly, PixelFormat.Format16bppArgb1555);
-        //    int byteStride = bd.Stride;
-        //    const int numColours = 16 * 8;
-        //    short[] tempArray = new short[16 * 8];
-        //    ushort[] colourData = new ushort[16 * 8];
-        //    foreach (PositionData pd in posData)
-        //    {
-        //        PositionData pdToUse = pd;
-        //        bool makeTopLeftBlack = false;
-        //        ushort actualTile = pd.tile;
-        //        //if ((pd.tile & 0x0800) != 0)
-        //        //{
-        //        //    actualTile = (ushort)(pd.tile & ~0x800);
-        //        //    makeTopLeftBlack = true;
-        //        //}
-        //        if (pdToUse.palette != 0xFF)
-        //        {
-        //            // this can happens if you cut separate files based on the 
-        //            // 0x1f 0x8b 0x0f gz pattern, since a few have that pattern in the middle of them
-        //            // cutting like that will truncate them
-        //            if (actualTile >= slices.Count)
-        //            {
-        //                throw new InvalidDataException("File is invalid, the file has probably been truncated or only half decompressed");
-        //            }
-        //            ImageSlice tile = slices[actualTile];
-        //            Palette p = palettes[pdToUse.palette];
-        //            ushort topLeft = p.colours[tile.rect[0]];
-
-        //            for (int i = 0; i < (16 * 8); ++i)
-        //            {
-        //                byte colourIndex = tile.rect[i];
-        //                ushort pixelColour = p.colours[colourIndex];
-        //                if (makeTopLeftBlack && (pixelColour == topLeft))
-        //                {
-        //                    colourData[i] = 0; //(int)(pixelColour.ToArgb() & 0x00FFFFFF);
-        //                }
-        //                else
-        //                {
-        //                    if ((pixelColour & 0x7fff) == 0)
-        //                    {
-        //                        colourData[i] = 0; // make black transparent
-        //                    }
-        //                    else
-        //                    {
-        //                        colourData[i] = (ushort)(pixelColour | (1 << 15));
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            for (int i = 0; i < (16 * 8); ++i)
-        //            {
-        //                colourData[i] = actualTile;
-        //            }
-        //        }
-        //        Buffer.BlockCopy(colourData, 0, tempArray, 0, colourData.Length * sizeof(short));
-        //        IntPtr scanLineIter = new IntPtr(bd.Scan0.ToInt64() + ((pdToUse.y * byteStride) + (pdToUse.x * 2)));
-        //        for (int i = 0; i < 8; ++i)
-        //        {
-        //            Marshal.Copy(tempArray, i * 16, scanLineIter, 16);
-        //            scanLineIter = new IntPtr(scanLineIter.ToInt64() + bd.Stride);
-        //        }
-        //    }
-        //    bm.UnlockBits(bd);
-        //}
 
         public enum BoxItem : ushort
         {
@@ -779,6 +752,18 @@ namespace GTMP
                 get;
                 set;
             }
+
+            public override string ToString()
+            {
+                return String.Format(
+                    "Metadata: BackLink = {0}, ManuID = {1}, BGIndex = {2}, BLToPrev = {3}, ScreenType = {4}",
+                    BackLink,
+                    ManufacturerID,
+                    BackgroundIndex,
+                    BackLinkToPreviousScreen,
+                    ScreenType
+                );
+            }
         }
 
         internal class GMFileInfo
@@ -1042,7 +1027,7 @@ namespace GTMP
             int gmllHeaderPos;
             GMMetadata metadata;
             List<DrawRectInfo> clickablePos = ParsePrePixelData(Path.GetFileName(fileName), fileData, out gmllHeaderPos, out metadata);
-#if !GMCREATOR && !DO_GRAPHIC_DRAW
+#if !GMCREATOR && DO_GRAPHIC_DRAW
             return new GMFileInfo();
 #else
             Bitmap bm = ParseGMLLData(fileData, gmllHeaderPos, clickablePos);
@@ -1063,8 +1048,6 @@ namespace GTMP
             byte[] imageArray = new byte[numImageBytes];
             Array.Copy(fileData, pixelDataOffset, imageArray, 0, numImageBytes);
 
-            // black colour (0x0000) is made transparent when compositing
-            List<ushort> colours = new List<ushort>();
             int palettePosIter = paletteOffset;
             for (int i = 0; i < 32; ++i)
             {
@@ -1073,15 +1056,27 @@ namespace GTMP
                 {
                     // colours are in BGR format
                     ushort colour = BitConverter.ToUInt16(fileData, palettePosIter);
-                    colours.Add(colour);
                     p.colours[j] = colour;
                 }
                 paletteList.Add(p);
-                p.SwizzleColours();
+                p.GMSwizzleColours();
+#if PRINT_PALETTES
+                Console.WriteLine("Palette {0}:", i + 1);
+                int colNum = 0;
+                for(int j = 0; j < p.colours.Length; ++j)
+                {
+                    ushort colour = p.colours[j];
+                    if(colNum++ == 8)
+                    {
+                        colNum = 0;
+                        Console.WriteLine();
+                    }
+                    Console.Write("{0:x} ", colour);
+                }
+                Console.WriteLine();
+#endif
             }
             List<ImageSlice> slices = ParseSlices(imageArray, numTiles);
-            // image positiioning seems to be on an absolute 512x504 canvas even if there's
-            // only enough image data in the file to cover 512x8
             Rectangle bmSize = new Rectangle(0, 0, 512, 504);
 
             Bitmap bm;
@@ -1089,14 +1084,18 @@ namespace GTMP
             {
                 using (Graphics g = Graphics.FromImage(bmTemp))
                 {
+#if DRAW_BOXES_ON_IMAGE
                     g.FillRectangle(Brushes.Black, bmSize);
+#else
+                    g.FillRectangle(Brushes.Transparent, bmSize);
+#endif
                 }
                 bm = bmTemp.Clone(bmSize, PixelFormat.Format16bppArgb1555);
             }
             byte[] positionArray = new byte[numPositionsEntries * 4];
             Array.Copy(fileData, gmllPos + 8, positionArray, 0, positionArray.Length);
             List<GT2.PositionData> pd = ParsePositionData(positionArray, positionArray.Length);
-            GT2.Common.ArrangeSlices(bm, slices, paletteList, pd, false);
+            GT2.Common.ArrangeSlices(bm, slices, paletteList, pd);
 #if DRAW_FOUND_BOXES_ON_IMAGE
             SortedList<DrawnPoint, int> drawnPoints = new SortedList<DrawnPoint, int>();
             if ((clickablePos != null) && (clickablePos.Count > 0))
@@ -1150,7 +1149,7 @@ namespace GTMP
             {
                 string name = Path.GetFileName(file);
                 string outputFile = Path.Combine(outDir, name + ".png");
-                //bm.Save(outputFile, ImageFormat.Png);
+                bm.Save(outputFile, ImageFormat.Png);
             }
         }
 

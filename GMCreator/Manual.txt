@@ -135,9 +135,11 @@ Clear All
 Removes all the drawn and inserted boxes. 
 
 
-Show Inner Content
---------------------
-Toggleable master switch for rendering the internal contents of the boxes. 
+ooooooooooooooo
+o Layers menu
+ooooooooooooooo
+
+These toggle various parts of the canvas display. Turning these on or off has no effect on what is exported or loaded
 
 
 ooooooooooooooooo

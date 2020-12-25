@@ -43,7 +43,6 @@ namespace GTMP
                     slices.Add(s);
                 }
             }
-            //slices.Sort();
             return slices;
         }
 
@@ -85,7 +84,12 @@ namespace GTMP
                 }
                 else
                 {
-                    pd.tile = GT2.Palette.SwizzleColour(tileAndPal);
+                    // these never have the high bit set, so they'll leave transparent blocks in the 
+                    // image if we don't set it
+                    pd.tile = (ushort)(GT2.Palette.GTMPSwizzleColour(tileAndPal) | 0x8000);
+#if PRINT_PALETTES
+                    Console.WriteLine("Solid tile of colour {0:x} at {1}x{2}", pd.tile, pd.x, pd.y);
+#endif
                     pd.palette = 0xFF;
                 }
                 pdList.Add(pd);
@@ -120,8 +124,6 @@ namespace GTMP
             // read the raw 16x8 squares and make them into their rects
             byte[] imageArray = br.ReadBytes(numImageBytes);
             List<ImageSlice> slices = ParseSlices(imageArray);
-            //List<ushort> highBitSetColours = new List<ushort>();
-            //List<ushort> noHighBitSetColours = new List<ushort>();
             // read the palettes
             br.BaseStream.Seek(paletteOffset, SeekOrigin.Begin);
             for(int i = 0; i < 16; ++i)
@@ -131,21 +133,25 @@ namespace GTMP
                 {
                     // colours are in BGR format
                     ushort colour = br.ReadUInt16();
-                    //if ((colour & 0x8000) == 0)
-                    //{
-                    //    if (colour != 0)
-                    //    {
-                    //        noHighBitSetColours.Add(colour);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    highBitSetColours.Add(colour);
-                    //}
                     p.colours[j] = colour;
                 }
+#if PRINT_PALETTES
+                Console.WriteLine("Palette {0}:", i + 1);
+                int colNum = 0;
+                for (int j = 0; j < p.colours.Length; ++j)
+                {
+                    ushort colour = p.colours[j];
+                    if (colNum++ == 16)
+                    {
+                        colNum = 1;
+                        Console.WriteLine();
+                    }
+                    Console.Write("{0:x} ", colour);       
+                }
+                Console.WriteLine();
+#endif
                 paletteList.Add(p);
-                p.SwizzleColours();
+                p.GTMPSwizzleColours();
             }
             br.BaseStream.Seek(4, SeekOrigin.Begin);
             // image positiioning seems to be on an absolute 512x504 canvas even if there's
@@ -163,7 +169,7 @@ namespace GTMP
                 bm = bmTemp.Clone(imageRect, PixelFormat.Format16bppArgb1555);
             }
             List<PositionData> pd = ParsePositionData(br, 0);
-            GT2.Common.ArrangeSlices(bm, slices, paletteList, pd, false);
+            GT2.Common.ArrangeSlices(bm, slices, paletteList, pd);
             return bm;
         }
 
@@ -381,7 +387,7 @@ namespace GTMP
                         p.colours[j] = color;
                     }
                     paletteList.Add(p);
-                    p.SwizzleColours();
+                    p.GTMPSwizzleColours();
                 }
                 br.BaseStream.Seek(4, SeekOrigin.Begin);
                 List<ImageSlice> slices = ParseSlices(imageArray);
@@ -393,7 +399,7 @@ namespace GTMP
                     g.FillRectangle(Brushes.Black, new Rectangle(0, 0, 512, 504));
                 }
                 List<PositionData> pd = ParsePositionDataDemo(br, 0x3f00);
-                GT2.Common.ArrangeSlices(bm, slices, paletteList, pd, false);
+                GT2.Common.ArrangeSlices(bm, slices, paletteList, pd);
                 return bm;
             }
         }
@@ -404,8 +410,8 @@ namespace GTMP
             Console.WriteLine("Processing '{0}'", name);
             using (Bitmap bm = Parse(file))
             {
-                string outputFile = Path.Combine(outDir, name + ".png");
-                bm.Save(outputFile, ImageFormat.Png);
+                //string outputFile = Path.Combine(outDir, name + ".png");
+                //bm.Save(outputFile, ImageFormat.Png);
             }
         }
 

@@ -31,6 +31,14 @@ namespace GMCreator
         // the GMLL data of the foregrond image
         private byte[] currentForegroundGMLLData;
 
+        // PictureBox has a BackgroundImage and an Image property
+        // but can't set them both at the same time, so we have to composite our own
+        // single image
+        private Image canvasBgImage;
+        private Image canvasFgImage;
+
+        private LayerStateManager layerState;
+
         public const int CANVAS_WIDTH = 512;
         public const int CANVAS_HEIGHT = 504;
 
@@ -39,6 +47,14 @@ namespace GMCreator
         public MainForm()
         {
             InitializeComponent();
+            canvasBgImage = canvasFgImage = null;
+            ToolStripMenuItem[] stateItems = {
+                toggleBackgroundToolStripMenuItem,
+                toggleForegroundToolStripMenuItem,
+                toggleBoxesToolStripMenuItem,
+                toggleBoxContentsToolStripMenuItem
+            };
+            layerState = new LayerStateManager(stateItems);
             InitializeGlobals(Application.StartupPath);
             canvas.AllowDrop = true;
             allBoxes = new BoxList();
@@ -91,7 +107,14 @@ namespace GMCreator
             {
                 this.Bounds = Globals.App.WindowLocation;
             }
-            toggleContentsToolStripMenuItem.Checked = Globals.App.ShowInnerContent;
+            if (Globals.App.ShowInnerContent)
+            {
+                layerState.On(LayerStateManager.Layers.BoxContents);
+            }
+            else
+            {
+                layerState.Off(LayerStateManager.Layers.BoxContents);
+            }
         }
 
         private void MainForm_KeyUp(object sender, KeyEventArgs e)
@@ -99,7 +122,7 @@ namespace GMCreator
             Keys ctrlShift = Keys.Control | Keys.Shift;
             if ((e.KeyCode == Keys.F9) && ((e.Modifiers & ctrlShift) == ctrlShift))
             {
-                string fileName = GetSaveFileName(this, "Save Log", "Log files (*.log, *.txt)|*.log,*.txt");
+                string fileName = GetSaveFileName(this, "Save Log", "Log files (*.log, *.txt)|*.log,*.txt", null);
                 if (String.IsNullOrEmpty(fileName))
                 {
                     return;
@@ -176,14 +199,6 @@ namespace GMCreator
             SetUnsavedChanges();
         }
 
-        private void toggleContentsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ToolStripMenuItem toggle = (ToolStripMenuItem)sender;
-            Globals.App.ShowInnerContent = toggle.Checked;
-            DebugLogger.Log("Main", "Global inner content toggle to {0}", toggle.Checked);
-            RedrawCanvas();
-        }
-
         private void saveGMProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             CommonProjectSave(currentProjectFileName);
@@ -246,6 +261,28 @@ namespace GMCreator
                     }
                 }
             }
+        }
+
+        private void toggleLayerStateMenuClick(object sender, EventArgs e)
+        {
+            ToolStripMenuItem item = (ToolStripMenuItem)sender;
+            LayerStateManager.Layers before = layerState.Query(LayerStateManager.Layers.All);
+            LayerStateManager.Layers after = layerState.Toggle((LayerStateManager.Layers)item.Tag);
+
+            if ((before & after) != (LayerStateManager.Layers.Background | LayerStateManager.Layers.Foreground))
+            {
+                RecompositeCanvasImage();
+            }
+            RedrawCanvas();
+        }
+
+        private void toggleBoxContentsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ToolStripMenuItem toggle = (ToolStripMenuItem)sender;
+            LayerStateManager.Layers state = layerState.Toggle(LayerStateManager.Layers.BoxContents);
+            Globals.App.ShowInnerContent = ((state & LayerStateManager.Layers.BoxContents) != 0);
+            DebugLogger.Log("Main", "Global inner content toggle to {0}", Globals.App.ShowInnerContent);
+            RedrawCanvas();
         }
 
 #if DEBUG
@@ -325,6 +362,7 @@ namespace GMCreator
                     // right click cancels any drawing
                     if (e.Button != MouseButtons.Right)
                     {
+                        layerState.On(LayerStateManager.Layers.Boxes);
                         Box b = allBoxes.AddNewBox(MakeGoodRectangle(anchorClick, e.Location));
                         b.DisplayChanged += new BoxDisplayChange(BoxInvalidation);
                         ChangeSelectedBox(b);
@@ -359,7 +397,7 @@ namespace GMCreator
             else currentRect = Rectangle.Empty;
             try
             {
-                allBoxes.Draw(e.Graphics, e.ClipRectangle, currentRect);
+                allBoxes.Draw(e.Graphics, e.ClipRectangle, currentRect, layerState.Query(LayerStateManager.Layers.Boxes));
             }
             catch (Exception exc)
             {

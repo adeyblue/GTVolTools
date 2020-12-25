@@ -296,7 +296,7 @@ namespace GMCreator
             set;
         }
 
-        public override void Draw(Graphics g, Rectangle clipRect)
+        public override void Draw(Graphics g, Rectangle clipRect, bool drawOutline)
         {
             Rectangle loc = Location;
             if (loc.IntersectsWith(clipRect) || hardcodedRenderLoc.IntersectsWith(clipRect))
@@ -304,7 +304,10 @@ namespace GMCreator
                 Color usedColour = isSelected ? Globals.App.SelectedOutlineColour : outline;
                 using(Pen p = new Pen(usedColour))
                 {
-                    g.DrawRectangle(p, loc);
+                    if (drawOutline)
+                    {
+                        g.DrawRectangle(p, loc);
+                    }
                     if (ShowInnerContent && Globals.App.ShowInnerContent)
                     {
                         renderer.Render(g, loc);

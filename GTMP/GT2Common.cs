@@ -15,20 +15,46 @@ namespace GT2
             colours = new ushort[numColours];
         }
 
-        public static ushort SwizzleColour(ushort colour)
+        public static ushort GMSwizzleColour(ushort colour)
         {
             int blue = colour & 0x1f;
             int green = (colour & (0x1f << 5));
             int red = (colour & (0x1f << 10)) >> 10;
+            // The game colours never have the high-bit set
+            // The exception is that black (ARGB0000) is treated as transparent by the game
+            // except when it has the high bit set, which makes it opaque
+            // so we leave the top bits for both blacks alone and toggle all the rest
+            if ((colour & 0x7fff) != 0)
+            {
+                colour ^= 0x8000;
+            }
+            int highBit =  colour & 0x8000;
+            return (ushort)(highBit | (blue << 10) | green | red);
+        }
+
+        public static ushort GTMPSwizzleColour(ushort colour)
+        {
+            int blue = colour & 0x1f;
+            int green = (colour & (0x1f << 5));
+            int red = (colour & (0x1f << 10)) >> 10;
+            // Backgrounds palette colours always have the high bit set
             int highBit = colour & 0x8000;
             return (ushort)(highBit | (blue << 10) | green | red);
         }
 
-        public void SwizzleColours()
+        public void GMSwizzleColours()
         {
             for (int i = 0; i < colours.Length; ++i)
             {
-                colours[i] = SwizzleColour(colours[i]);
+                colours[i] = GMSwizzleColour(colours[i]);
+            }
+        }
+
+        public void GTMPSwizzleColours()
+        {
+            for (int i = 0; i < colours.Length; ++i)
+            {
+                colours[i] = GTMPSwizzleColour(colours[i]);
             }
         }
     }
@@ -36,6 +62,10 @@ namespace GT2
     internal class ImageSlice
     {
         public byte[] rect;
+        public ImageSlice(byte[] data)
+        {
+            rect = data;
+        }
         public ImageSlice()
         {
             rect = new byte[16 * 8];
@@ -89,8 +119,7 @@ namespace GT2
             Bitmap bm, 
             List<ImageSlice> slices, 
             List<Palette> palettes, 
-            List<PositionData> posData,
-            bool makeBlackTransparent
+            List<PositionData> posData
         )
         {
             Rectangle lockRect = new Rectangle(0, 0, bm.Width, bm.Height);
@@ -110,19 +139,12 @@ namespace GT2
                     for (int i = 0; i < numColours; ++i)
                     {
                         ushort pixelColour = p.colours[tile.rect[i]];
-                        if (makeBlackTransparent && ((pixelColour & 0x7fff) == 0))
-                        {
-                            colourData[i] = 0; // make black transparent
-                        }
-                        else
-                        {
-                            colourData[i] = (ushort)(pixelColour | (1 << 15));
-                        }
+                        colourData[i] = pixelColour;
                     }
                 }
                 else
                 {
-                    ushort colour = (ushort)(pd.tile | 1 << 15);
+                    ushort colour = (ushort)pd.tile;
                     for (int i = 0; i < numColours; ++i)
                     {
                         colourData[i] = colour;
