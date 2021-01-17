@@ -162,7 +162,7 @@ namespace GT2Vol
             List<FSEntry> subDirEntries = new List<FSEntry>();
             FSEntry startOfDirEntry = new FSEntry();
             startOfDirEntry.tocEntry = new TocEntry();
-            startOfDirEntry.tocEntry.dateTime = (int)(DateTime.Now - dtEpoch).TotalSeconds;
+            startOfDirEntry.tocEntry.dateTime = (int)(DateTime.UtcNow - dtEpoch).TotalSeconds;
             startOfDirEntry.tocEntry.flags = TOCFlags_Directory;
             startOfDirEntry.tocEntry.offsetIndex = 0;
             startOfDirEntry.compressedFile = null;
@@ -284,13 +284,13 @@ namespace GT2Vol
             // TOC size is numFiles * sizeof(TOCEntry)
             MemoryStream tocStream = new MemoryStream(entries.Count * 0x20);
             BinaryWriter bw = new BinaryWriter(tocStream);
-            short numOffsets = 2; // 0 = start of file, 1 = toc, 2+ = files, last one = file size
+            short numOffsets = 2; // 0 = start of file, 1 = toc
             foreach (FSEntry f in entries)
             {
                 TocEntry te = f.tocEntry;
                 if ((te.flags & TOCFlags_Directory) == 0)
                 {
-                    te.offsetIndex = numOffsets++;
+                    te.offsetIndex = numOffsets++; // 2+ = files
                     //++numFiles;
                 }
                 bw.Write(te.dateTime);
@@ -301,6 +301,7 @@ namespace GT2Vol
                 bw.Write(name, 0, 25);
             }
             bw.Flush();
+            ++numOffsets; // last one = file size
 
             HeaderInfo hi = new HeaderInfo();
 
@@ -315,7 +316,7 @@ namespace GT2Vol
             Array.Resize(ref headerBuffer, 16);
             hi.header = headerBuffer;
 
-            int[] offsets = new int[numOffsets + 3];
+            int[] offsets = new int[numOffsets];
             // first the size of the file header + offset list
             int offsetSectionSize = 0x10 + (offsets.Length * sizeof(int));
             int offsetToTocPadding = 0x800 - (offsetSectionSize % 0x800);
@@ -366,16 +367,9 @@ namespace GT2Vol
                         else
                         {
                             // otherwise read it in and write it to the memory
-                            using (FileStream fs = new FileStream(entry.diskFile, FileMode.Open, FileAccess.Read))
-                            {
-                                size = (int)fs.Length;
-                                byte[] d = new byte[0x8000];
-                                int read = 0;
-                                while ((read = fs.Read(d, 0, d.Length)) > 0)
-                                {
-                                    bw.Write(d, 0, read);
-                                }
-                            }
+                            byte[] thisFileData = File.ReadAllBytes(entry.diskFile);
+                            size = thisFileData.Length;
+                            bw.Write(thisFileData);
                         }
                         // write the pad bytes
                         int remainder = 0x800 - (size % 0x800);
@@ -390,7 +384,8 @@ namespace GT2Vol
                 }
                 bw.Flush();
                 fileData.Position = 0;
-                offsets[offsets.Length - 1] = nextOffset; // last one is the file size
+                Debug.Assert((2 + fileCount) == (offsets.Length - 1));
+                offsets[2 + fileCount] = nextOffset; // last one is the file size
                 using (FileStream newVolFile = new FileStream(newVol, FileMode.Create, FileAccess.Write))
                 {
                     byte[] offBytes = new byte[offsets.Length * sizeof(int)];

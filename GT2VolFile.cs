@@ -25,6 +25,7 @@ namespace GT2Vol
         private List<WaitHandle> outstandingRequests;
         private ManualResetEvent[] explodeEvents;
         private long volMappingAddrAsNum;
+        private long volFileSize;
         private bool disposed;
         public static string DecompDir = "decomp";
         private enum ExplodeEvents
@@ -45,6 +46,7 @@ namespace GT2Vol
             DecompDir = "decomp";
             using (FileStream theVol = new FileStream(name, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
+                volFileSize = theVol.Length;
                 IntPtr volMapping = MemoryMappedFile.Map(theVol);
                 volMappingAddrAsNum = volMapping.ToInt64();
             }
@@ -207,9 +209,15 @@ namespace GT2Vol
             Marshal.Copy(offStart, offsetBytes, 0, offsetBytes.Length);
             Buffer.BlockCopy(offsetBytes, 0, offsets, 0, offsetBytes.Length);
 
+            // insert the size of the file as the last offset
+            // so we can get the length of the last actual file
+            Array.Resize(ref offsets, offsets.Length + 1);
+            offsets[offsets.Length - 1] = (uint)volFileSize;
+
             // offsets[0] = offset of the offsets
             // offsets[1] = toc
-            // offsets[2...n] = files
+            // offsets[2...n - 2] = files
+            // offsets[n - 1] = fileSize
             uint unusedLastSectorBytes = 0;
             uint tocOffset = SanitiseOffset(offsets[1], out unusedLastSectorBytes);
 
@@ -321,7 +329,7 @@ namespace GT2Vol
                         dirName += Path.DirectorySeparatorChar + VolFile.DecompDir;
                     }
                     DirectoryInfo di = Directory.CreateDirectory(dirName);
-                    DateTime dirDate = new DateTime(1970, 1, 1, 0, 0, 0).AddSeconds(efi.dateTime);
+                    DateTime dirDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(efi.dateTime);
                     di.LastAccessTime = di.LastWriteTime = di.CreationTime = dirDate;
                     //Directory.SetCreationTime(dirName, dirDate);
                     //Directory.SetLastWriteTime(dirName, dirDate);

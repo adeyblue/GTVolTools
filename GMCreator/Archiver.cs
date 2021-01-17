@@ -99,8 +99,6 @@ namespace GMCreator
                             if (nextData != null)
                             {
                                 WriteState ws = new WriteState(archive, completeWriteCount);
-                                archive.Position = bytesWrittenSoFar;
-                                archive.BeginWrite(nextData, 0, nextData.Length, new AsyncCallback(WriteComplete), ws);
                                 int dataLen = nextData.Length;
                                 int lengthWithAlignment = dataLen;
                                 int padAmount = 0;
@@ -108,7 +106,11 @@ namespace GMCreator
                                 {
                                     lengthWithAlignment = (lengthWithAlignment + fileAlignment) & ~fileAlignment;
                                     padAmount = lengthWithAlignment - dataLen;
+                                    Array.Resize(ref nextData, lengthWithAlignment);
                                 }
+                                archive.Position = bytesWrittenSoFar;
+                                archive.BeginWrite(nextData, 0, lengthWithAlignment, new AsyncCallback(WriteComplete), ws);
+
                                 idxWriter.Write(bytesWrittenSoFar | padAmount);
                                 bytesWrittenSoFar += lengthWithAlignment;
                                 ++writeIndexSoFar;
