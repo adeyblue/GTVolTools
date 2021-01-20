@@ -224,6 +224,9 @@ namespace GTMPConverter
                             (byte)(y / PixelBuffer.TILE_HEIGHT)
                         ).SetSolidColour(singleColour);
                         positions.Add(pd);
+#if DEBUG
+                        Console.WriteLine("Found solid colour tile at {0}x{1} of colour {2:x}", x, y, singleColour);
+#endif
                     }
                     // else this is a tile containing only black and/or transparent colours
                     // and the converter profile said it shouldn't be included in the image file

@@ -37,7 +37,8 @@ namespace GT2
             int blue = colour & 0x1f;
             int green = (colour & (0x1f << 5));
             int red = (colour & (0x1f << 10)) >> 10;
-            // Backgrounds palette colours always have the high bit set
+            // Backgrounds palette colours always have the high bit set, except transparent black
+            // Background solid tiles never have the high bit set
             int highBit = colour & 0x8000;
             return (ushort)(highBit | (blue << 10) | green | red);
         }

@@ -16,6 +16,7 @@ namespace GMCreator
         public Color AnchorColour = Color.Gray;
         public Color DefaultOutlineColour = Color.Yellow;
         public Color SelectedOutlineColour = Color.White;
+        public Color TransparentBackgroundAreasColour = Color.Magenta;
         public int CompressionLevel = 9;
         public bool ShowInnerContent = true;
         public IconImgType GT2Version = IconImgType.Invalid;
@@ -83,11 +84,6 @@ namespace GMCreator
                 App = new AppSettings();
             }
             App.RefreshNonSerialised();
-            if (DebugLogger.DoDebugActions())
-            {
-                g_debugSaveDir = Path.Combine(fileDir, "saved");
-                Directory.CreateDirectory(g_debugSaveDir);
-            }
         }
 
         static public void Save(string fileDir, Rectangle windowBounds)
@@ -103,6 +99,19 @@ namespace GMCreator
             {
                 DebugLogger.Log("Settings", "Caught exception {0} saving settings file to {1}", e.Message, filePath);
             }
+        }
+
+        internal static void RestartLoggingDir(string dir)
+        {
+            g_debugSaveDir = dir;
+            try
+            {
+                Directory.Delete(dir, true);
+            }
+            // won't exist the first time
+            catch (Exception)
+            { }
+            Directory.CreateDirectory(dir);
         }
 
         internal static string MakeDebugSaveName(bool incrementNumber, string pattern, params object[] objs)

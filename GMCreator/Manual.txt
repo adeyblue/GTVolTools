@@ -147,7 +147,7 @@ o Settings menu
 ooooooooooooooooo
 
 Shows the settings dialog.
-You can change the size and colour of the anchors, the default colour of the boxes and the selected box colour.
+You can change the size and colour of the anchors, the default colour of the boxes, the selected box colour and the colour that shows through the transparent areas of the background image.
 
 You can also change the compression level of the exported GM file between 0 and 9. Higher numbers mean better compression (and smaller files) but may take longer to decompress, while lower numbers mean bigger files bit that shouldn't take as long to decompress. Comparing the file sizes, 9 seems to be approximately what the game uses.
 
@@ -203,6 +203,11 @@ The reverse operation of the make. This takes a single commonpic.dat/commonpic.i
 Split GTMenuDat.dat
 ---------------------------
 The reverse operation of the make. This takes a single gtmenudat.dat/gtmenudat.idx archive pair and explodes it into the constituent compressed GM files. It will also convert the GM files into png files, so you can tell what each one is without having to load them into the tool one-by-one. As this tool can load compressed GM files, it will not decompress the extracted GM files after splitting the GTMenuDat. If you need to decompress them for whatever reason, 7-zip can do it.
+
+
+Toggle Action Logging
+----------------------------
+Turns on or off the recording of pictures loaded and exported to help with debugging. You'll only need to turn this on if you have problems and are told to.
 
 
 

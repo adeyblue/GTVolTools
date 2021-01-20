@@ -24,6 +24,8 @@ namespace GMCreator
             drawBoxColourSwatch.Tag = drawBoxColourHex;
             selectedBoxColourHex.Tag = selectedBoxColourSwatch;
             selectedBoxColourSwatch.Tag = selectedBoxColourHex;
+            bgTransparencyHex.Tag = bgTransparencySwatch;
+            bgTransparencySwatch.Tag = bgTransparencyHex;
             customColours = new int[16];
             versionButtons[(int)IconImgType.JP10] = gt2VersionJP10;
             versionButtons[(int)IconImgType.JP11] = gt2VersionJP11;
@@ -59,6 +61,9 @@ namespace GMCreator
                 selectedBoxColourSwatch.BackColor = settings.SelectedOutlineColour;
                 selectedBoxColourHex.Text = FormatColorString(settings.SelectedOutlineColour);
 
+                bgTransparencyHex.Text = FormatColorString(settings.TransparentBackgroundAreasColour);
+                bgTransparencySwatch.BackColor = settings.TransparentBackgroundAreasColour;
+
                 compressionLevelNumber.Value = settings.CompressionLevel;
 
                 if (settings.GT2Version != IconImgType.Invalid)
@@ -91,6 +96,8 @@ namespace GMCreator
             settings.DefaultOutlineColour = drawBoxColourSwatch.BackColor;
 
             settings.SelectedOutlineColour = selectedBoxColourSwatch.BackColor;
+
+            settings.TransparentBackgroundAreasColour = bgTransparencySwatch.BackColor;
 
             settings.CompressionLevel = (int)compressionLevelNumber.Value;
 

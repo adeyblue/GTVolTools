@@ -170,30 +170,6 @@ namespace GMCreator
             return MessageBox.Show(message, "GMCreator", buttons, icon);
         }
 
-        //private void BGImageLoad(string fileName, Images.ImageLoadResult info)
-        //{
-        //    Image origBG = canvas.BackgroundImage;
-        //    DebugLogger.Log("Main", "Loaded BG of type {0} from {1}", info.type.ToString(), fileName);
-        //    if (DebugLogger.DoDebugActions())
-        //    {
-        //        string newBGName = Globals.MakeDebugSaveName(true, Path.GetFileName(fileName));
-        //        File.Copy(fileName, newBGName, true);
-        //        string newConvertedBG = Globals.MakeDebugSaveName(false, "newconvertedbg.png");
-        //        info.image.Save(newConvertedBG, System.Drawing.Imaging.ImageFormat.Png);
-        //    }
-        //    canvas.BackgroundImage = info.image;
-        //    if(origBG != null)
-        //    {
-        //        if (DebugLogger.DoDebugActions())
-        //        {
-
-        //            string previousBG = Globals.MakeDebugSaveName(false, "previousbg.png");
-        //            origBG.Save(previousBG, System.Drawing.Imaging.ImageFormat.Png);
-        //        }
-        //        origBG.Dispose();
-        //    }
-        //}
-
         private void RecompositeCanvasImage()
         {
             Bitmap bm = new Bitmap(CANVAS_WIDTH, CANVAS_HEIGHT, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -203,6 +179,7 @@ namespace GMCreator
                 g.Clear(Color.Black);
                 if ((canvasBgImage != null) && ((fgbg & LayerStateManager.Layers.Background) != 0))
                 {
+                    g.Clear(Globals.App.TransparentBackgroundAreasColour);
                     g.DrawImage(canvasBgImage, Point.Empty);
                 }
                 if ((canvasFgImage != null) && ((fgbg & LayerStateManager.Layers.Foreground) != 0))
@@ -818,8 +795,10 @@ namespace GMCreator
             string[] allFiles = Directory.GetFiles(inDir);
             int numFiles = allFiles.Length;
             WaitDlg dlg = rta.dlg;
+            string pngDirectory = Path.Combine(inDir, "bmp");
             dlg.UpdateStatus("Recompressing {0} files", numFiles);
             string outDir = rta.outDir;
+            string gmllFile = @"T:\out.gmll";
             for (int i = 0; i < numFiles; ++i)
             {
                 Box.ResetIndexCount();
@@ -831,33 +810,41 @@ namespace GMCreator
                     decompGM = Compress.GZipDecompress(fs);
                     gmFileData = decompGM.ToArray();
                 }
+                string curFile = Path.GetFileName(currentFile);
+                string pngFile = Path.Combine(pngDirectory, curFile + ".bmp");
                 GTMP.GMFile.GMFileInfo fi = GTMP.GMFile.Parse(decompGM);
                 List<IBox> boxes = ConvertGMFileBoxes(fi.Boxes);
+                if (!Tools.ConvertImageTo(pngFile, gmllFile, Tools.ConvertType.GM))
+                {
+                    dlg.UpdateStatus(String.Format("Couldn't convert {0} to GT2 foreground, skipping", pngFile));
+                    continue;
+                }
 
                 try
                 {
-                    byte[] gmllData = Images.TrimToGMLLData(gmFileData);
-                    string newFileName = Path.Combine(outDir, Path.GetFileName(currentFile));
+                    byte[] gmllData = Images.LoadGMLLData(gmllFile);
+                    string newFileName = Path.Combine(outDir, curFile);
                     GMProject.ExportGM(newFileName, boxes, fi.Metadata, gmllData);
                 }
                 catch (InvalidBoxStateException ibse)
                 {
                     DebugLogger.Log("Debug", "Exception was from {0}", currentFile);
                     dlg.UpdateStatus("Caught invalid box exception {0} for {1} in file {2}", ibse.Message, ibse.InvalidBox.Name, currentFile);
+                    File.Delete(gmllFile);
                 }
 
-                if ((i != 0) && ((i % 10) == 0))
+                if ((i != 0) && ((i % 100) == 0))
                 {
                     dlg.UpdateStatus(String.Format("Tested {0} files", i));
                 }
             }
-            dlg.AllowClose("All converted");
+            dlg.AllowClose("All done");
         }
 
         private void recompressFiles_Click(object sender, EventArgs e)
         {
-            string inDir = @"C:\Users\Adrian\Downloads\Fantavision (Japan)\T";
-            string outDir = @"C:\Users\Adrian\Downloads\Fantavision (Japan)\recompressedGMs";
+            string inDir = @"C:\Users\Adrian\Downloads\GT2\US1.0Vol\USBmpTest";
+            string outDir = @"C:\Users\Adrian\Downloads\GT2\US1.0Vol\USBmpTestMod";
             using (WaitDlg dlg = new WaitDlg("Checking GM Files"))
             {
                 RecompressThreadArgs rta = new RecompressThreadArgs();

@@ -73,6 +73,7 @@
             this.splitGTMenuDatdatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.makeCommonPicdatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.makeGTMenuDatdatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleLoggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
@@ -472,7 +473,8 @@
             this.splitCommonpicdatToolStripMenuItem,
             this.splitGTMenuDatdatToolStripMenuItem,
             this.makeCommonPicdatToolStripMenuItem,
-            this.makeGTMenuDatdatToolStripMenuItem});
+            this.makeGTMenuDatdatToolStripMenuItem,
+            this.toggleLoggingToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "&Tools";
@@ -511,6 +513,15 @@
             this.makeGTMenuDatdatToolStripMenuItem.Size = new System.Drawing.Size(233, 22);
             this.makeGTMenuDatdatToolStripMenuItem.Text = "Make &GTMenuDat.dat";
             this.makeGTMenuDatdatToolStripMenuItem.Click += new System.EventHandler(this.makeGTMenuDatdatToolStripMenuItem_Click);
+            // 
+            // toggleLoggingToolStripMenuItem
+            // 
+            this.toggleLoggingToolStripMenuItem.CheckOnClick = true;
+            this.toggleLoggingToolStripMenuItem.Name = "toggleLoggingToolStripMenuItem";
+            this.toggleLoggingToolStripMenuItem.Size = new System.Drawing.Size(233, 22);
+            this.toggleLoggingToolStripMenuItem.Text = "Toggle Action Logging";
+            this.toggleLoggingToolStripMenuItem.ToolTipText = "Starts and stops recording of pictures loaded and created for better debugging";
+            this.toggleLoggingToolStripMenuItem.Click += new System.EventHandler(this.toggleLoggingToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -592,6 +603,7 @@
         private System.Windows.Forms.ToolStripMenuItem toggleBackgroundToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleBoxesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleBoxContentsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toggleLoggingToolStripMenuItem;
 
     }
 }

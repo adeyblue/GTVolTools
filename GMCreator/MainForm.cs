@@ -285,6 +285,23 @@ namespace GMCreator
             RedrawCanvas();
         }
 
+        private void toggleLoggingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // turning it off
+            if (DebugLogger.DoDebugActions())
+            {
+                string debugFile = Globals.MakeDebugSaveName(true, "log.txt");
+                System.IO.File.WriteAllText(debugFile, DebugLogger.GetContents());
+            }
+            // turning it on
+            else
+            {
+                string dir = Path.Combine(Application.StartupPath, "logged");
+                Globals.RestartLoggingDir(dir);
+            }
+            DebugLogger.ToggleDebugActions();
+        }
+
 #if DEBUG
         private void dumpCanvas_Click(object sender, EventArgs e)
         {

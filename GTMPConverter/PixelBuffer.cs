@@ -104,7 +104,10 @@ namespace GTMPConverter
             // y full rows plus another TILE_HEIGHT full rows if we have a partially filled one
             bool hasPartialRows = (x > 0);
             int numPixels = (y * canvasWidth) + (hasPartialRows ? (TILE_HEIGHT * canvasWidth) : 0);
-            byte[] writtenPixels = new byte[numPixels];
+            // empty / solid backgrounds still have at least 0x1000 of pixel data
+            // even if they don't have any pixels that aren't solid tiles
+            int allocatedPixels = Math.Max(numPixels, 0x1000);
+            byte[] writtenPixels = new byte[allocatedPixels];
             Array.Copy(pixels, 0, writtenPixels, 0, y * canvasWidth);
             if (hasPartialRows)
             {

@@ -148,6 +148,8 @@ namespace GTMP
                 // if this flag is set, then the tile index is actually a BGR555 solid colour
                 // and is used for all 16 x 8 pixels instead of a tile
                 byte xPos = (byte)(x & 0x1F);
+                // apparently no files in the PAL version actually use the 
+                // solid colour capability?
                 byte isSolidColourFlag = (byte)((x & 0xE0) >> 5);
                 // turn these into pixel coordinates instead of tile coordinates
                 // to make it easier later
@@ -1084,7 +1086,7 @@ namespace GTMP
             {
                 using (Graphics g = Graphics.FromImage(bmTemp))
                 {
-#if DRAW_BOXES_ON_IMAGE
+#if DRAW_FOUND_BOXES_ON_IMAGE
                     g.FillRectangle(Brushes.Black, bmSize);
 #else
                     g.FillRectangle(Brushes.Transparent, bmSize);

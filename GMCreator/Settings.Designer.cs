@@ -64,6 +64,10 @@
             this.gt2VersionJP10 = new System.Windows.Forms.RadioButton();
             this.gt2VersionUS10 = new System.Windows.Forms.RadioButton();
             this.gt2VersionPALEng = new System.Windows.Forms.RadioButton();
+            this.bgColoursBox = new System.Windows.Forms.GroupBox();
+            this.bgTransparencySwatch = new System.Windows.Forms.PictureBox();
+            this.bgTransparencyHex = new System.Windows.Forms.TextBox();
+            this.bgTransparencyLabel = new System.Windows.Forms.Label();
             this.exportSettingsBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.compressionLevelNumber)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.centralAnchorWSize)).BeginInit();
@@ -76,6 +80,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.selectedBoxColourSwatch)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.drawBoxColourSwatch)).BeginInit();
             this.versionSettingsBox.SuspendLayout();
+            this.bgColoursBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bgTransparencySwatch)).BeginInit();
             this.SuspendLayout();
             // 
             // centralAnchorLabel
@@ -91,7 +97,7 @@
             // 
             this.exportSettingsBox.Controls.Add(this.compressionLevelNumber);
             this.exportSettingsBox.Controls.Add(this.compressionLabel);
-            this.exportSettingsBox.Location = new System.Drawing.Point(12, 198);
+            this.exportSettingsBox.Location = new System.Drawing.Point(12, 264);
             this.exportSettingsBox.Name = "exportSettingsBox";
             this.exportSettingsBox.Size = new System.Drawing.Size(256, 58);
             this.exportSettingsBox.TabIndex = 0;
@@ -319,7 +325,7 @@
             // 
             this.okSettingsButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.okSettingsButton.Enabled = false;
-            this.okSettingsButton.Location = new System.Drawing.Point(168, 367);
+            this.okSettingsButton.Location = new System.Drawing.Point(168, 433);
             this.okSettingsButton.Name = "okSettingsButton";
             this.okSettingsButton.Size = new System.Drawing.Size(99, 28);
             this.okSettingsButton.TabIndex = 8;
@@ -330,7 +336,7 @@
             // cancelSettingsButton
             // 
             this.cancelSettingsButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelSettingsButton.Location = new System.Drawing.Point(11, 367);
+            this.cancelSettingsButton.Location = new System.Drawing.Point(11, 433);
             this.cancelSettingsButton.Name = "cancelSettingsButton";
             this.cancelSettingsButton.Size = new System.Drawing.Size(99, 28);
             this.cancelSettingsButton.TabIndex = 9;
@@ -348,7 +354,7 @@
             this.versionSettingsBox.Controls.Add(this.gt2VersionJP10);
             this.versionSettingsBox.Controls.Add(this.gt2VersionUS10);
             this.versionSettingsBox.Controls.Add(this.gt2VersionPALEng);
-            this.versionSettingsBox.Location = new System.Drawing.Point(14, 262);
+            this.versionSettingsBox.Location = new System.Drawing.Point(14, 328);
             this.versionSettingsBox.Name = "versionSettingsBox";
             this.versionSettingsBox.Size = new System.Drawing.Size(253, 92);
             this.versionSettingsBox.TabIndex = 13;
@@ -463,11 +469,52 @@
             this.gt2VersionPALEng.UseVisualStyleBackColor = true;
             this.gt2VersionPALEng.CheckedChanged += new System.EventHandler(this.gt2Version_CheckedChanged);
             // 
+            // bgColoursBox
+            // 
+            this.bgColoursBox.Controls.Add(this.bgTransparencySwatch);
+            this.bgColoursBox.Controls.Add(this.bgTransparencyHex);
+            this.bgColoursBox.Controls.Add(this.bgTransparencyLabel);
+            this.bgColoursBox.Location = new System.Drawing.Point(12, 198);
+            this.bgColoursBox.Name = "bgColoursBox";
+            this.bgColoursBox.Size = new System.Drawing.Size(256, 51);
+            this.bgColoursBox.TabIndex = 19;
+            this.bgColoursBox.TabStop = false;
+            this.bgColoursBox.Text = "Background Colours";
+            // 
+            // bgTransparencySwatch
+            // 
+            this.bgTransparencySwatch.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
+            this.bgTransparencySwatch.Location = new System.Drawing.Point(213, 22);
+            this.bgTransparencySwatch.Name = "bgTransparencySwatch";
+            this.bgTransparencySwatch.Size = new System.Drawing.Size(32, 20);
+            this.bgTransparencySwatch.TabIndex = 15;
+            this.bgTransparencySwatch.TabStop = false;
+            this.bgTransparencySwatch.Click += new System.EventHandler(this.ShowColourBoxAndSetText);
+            // 
+            // bgTransparencyHex
+            // 
+            this.bgTransparencyHex.Location = new System.Drawing.Point(90, 22);
+            this.bgTransparencyHex.MaxLength = 9;
+            this.bgTransparencyHex.Name = "bgTransparencyHex";
+            this.bgTransparencyHex.Size = new System.Drawing.Size(117, 20);
+            this.bgTransparencyHex.TabIndex = 5;
+            this.bgTransparencyHex.TextChanged += new System.EventHandler(this.ParseHexColourAndSetSwatch);
+            // 
+            // bgTransparencyLabel
+            // 
+            this.bgTransparencyLabel.AutoSize = true;
+            this.bgTransparencyLabel.Location = new System.Drawing.Point(6, 25);
+            this.bgTransparencyLabel.Name = "bgTransparencyLabel";
+            this.bgTransparencyLabel.Size = new System.Drawing.Size(72, 13);
+            this.bgTransparencyLabel.TabIndex = 13;
+            this.bgTransparencyLabel.Text = "Transparency";
+            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(276, 407);
+            this.ClientSize = new System.Drawing.Size(276, 472);
+            this.Controls.Add(this.bgColoursBox);
             this.Controls.Add(this.versionSettingsBox);
             this.Controls.Add(this.cancelSettingsButton);
             this.Controls.Add(this.okSettingsButton);
@@ -493,6 +540,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.drawBoxColourSwatch)).EndInit();
             this.versionSettingsBox.ResumeLayout(false);
             this.versionSettingsBox.PerformLayout();
+            this.bgColoursBox.ResumeLayout(false);
+            this.bgColoursBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bgTransparencySwatch)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -535,5 +585,9 @@
         private System.Windows.Forms.RadioButton gt2VersionPALGer;
         private System.Windows.Forms.RadioButton gt2VersionPALIta;
         private System.Windows.Forms.RadioButton gt2VersionJP11;
+        private System.Windows.Forms.GroupBox bgColoursBox;
+        private System.Windows.Forms.PictureBox bgTransparencySwatch;
+        private System.Windows.Forms.TextBox bgTransparencyHex;
+        private System.Windows.Forms.Label bgTransparencyLabel;
     }
 }

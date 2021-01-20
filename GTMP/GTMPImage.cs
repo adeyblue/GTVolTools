@@ -86,9 +86,10 @@ namespace GTMP
                 {
                     // these never have the high bit set, so they'll leave transparent blocks in the 
                     // image if we don't set it
-                    pd.tile = (ushort)(GT2.Palette.GTMPSwizzleColour(tileAndPal) | 0x8000);
-#if PRINT_PALETTES
-                    Console.WriteLine("Solid tile of colour {0:x} at {1}x{2}", pd.tile, pd.x, pd.y);
+                    ushort origColour = GT2.Palette.GTMPSwizzleColour(tileAndPal);
+                    pd.tile = (ushort)(origColour | 0x8000);
+#if !PRINT_PALETTES
+                    Console.WriteLine("Solid tile of colour {0:x} at {1}x{2}", origColour, pd.x, pd.y);
 #endif
                     pd.palette = 0xFF;
                 }

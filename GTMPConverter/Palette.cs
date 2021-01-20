@@ -160,18 +160,43 @@ namespace GTMPConverter
             return true;
         }
 
-        public static bool AreAllBlackOrTransparent(ushort[] colours)
+        public static bool AreAllTransparent(ushort[] colours)
         {
             int numColours = colours.Length;
             for (int i = 0; i < numColours; ++i)
             {
-                // black is RGB 0,0,0, transparent is 0 alpha
-                if (((colours[i] & 0x7fff) != 0) || ((colours[i] >> 15) != 0))
+                // transparent is 0 alpha
+                if ((colours[i] & 0x8000) != 0)
                 {
                     return false;
                 }
             }
             return true;
+        }
+
+        public static void FlattenTransparencies(int[] colours)
+        {
+            ushort[] convertedColours = ConvertAllColoursToRGB555(colours);
+            int numColours = colours.Length;
+            for (int i = 0; i < numColours; ++i)
+            {
+                if ((colours[i] & 0xFF000000) != 0xFF000000)
+                {
+                    colours[i] = 0;
+                }
+            }
+        }
+
+        public static void FlattenTransparencies(ushort[] colours)
+        {
+            int numColours = colours.Length;
+            for (int i = 0; i < numColours; ++i)
+            {
+                if ((colours[i] & 0x8000) == 0)
+                {
+                    colours[i] = 0;
+                }
+            }
         }
 
         public static int CountUniqueColours(int[] colours)
@@ -271,18 +296,20 @@ namespace GTMPConverter
         public ImageSlice NaturalizeTile(ushort[] tile, out int paletteId)
 #endif
         {
-            if (convertProfile.FilterOutBlackAndTransparentBlocks && Palette.AreAllBlackOrTransparent(tile))
+            bool areAllTransparent = Palette.AreAllTransparent(tile);
+            if (convertProfile.FilterOutTransparentBlocks && areAllTransparent)
             {
                 paletteId = DISCARD_TILE;
                 return null;
             }
             // if this is a solid colour tile, it doesn't require pixels
-            // or palette data
-            else if (Palette.AreAllSameColour(tile))
+            // or palette data, except if this is a tranparent block, which does
+            else if (Palette.AreAllSameColour(tile) && !areAllTransparent)
             {
                 paletteId = -1;
                 return null;
-            }            
+            }
+            Palette.FlattenTransparencies(tile);
             int uniqueColours = Palette.CountUniqueColours(tile);
             if (uniqueColours > convertProfile.ColoursPerPalette)
             {
