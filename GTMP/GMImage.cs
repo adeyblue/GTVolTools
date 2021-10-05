@@ -36,8 +36,7 @@ namespace GTMP
     //    sbyte manufacturerID;
     //    byte screenBehaviour; // is set to 2 on car rendering sceens, and 3 that need help to know where to go when pressing triangle
     //    short screenType // no idea what importance this has, getting it 'wrong' doesn't seem to matter, but the values deffo are those in the ScreenType enum
-    //    short triangleLink; // the index of the GM screen you go to if you press triangle or square
-    //    short zero;
+    //    int triangleLink; // the index of the GM screen you go to if you press triangle or square
     //    int backgroundGMFile; // the 0-based index of the background image for this top-layer in commonpic.dat (0 = first image, 1 = second, etc)
     //    byte[4] gmllString; // "GMLL"
     //    int numOfPositionEntries;
@@ -719,7 +718,7 @@ namespace GTMP
 
             [System.ComponentModel.Category("File Metadata")]
             [System.ComponentModel.Description("0-based GM/gtmenudat screen index to go to on triangle/square press, -1 to disable")]
-            public short BackLink
+            public int BackLink
             {
                 get;
                 set;
@@ -940,7 +939,7 @@ namespace GTMP
             metadata.ScreenType = (ScreenType)BitConverter.ToInt16(fileData, byteIter);
             byteIter += 2;
             // back link
-            metadata.BackLink = BitConverter.ToInt16(fileData, byteIter);
+            metadata.BackLink = BitConverter.ToInt32(fileData, byteIter);
             byteIter += 4;
             // bg file
             metadata.BackgroundIndex = BitConverter.ToInt16(fileData, byteIter);

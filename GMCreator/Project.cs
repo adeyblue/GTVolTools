@@ -271,16 +271,15 @@ namespace GMCreator
                         b.Serialize(bw);
                     }
 
-                    int screenBehavoiour = (numCars != 0) ? 2 : 0;
+                    int screenBehaviour = (numCars != 0) ? 2 : 0;
                     if (metadata.BackLinkToPreviousScreen)
                     {
-                        screenBehavoiour = 3;
+                        screenBehaviour = 3;
                     }
                     bw.Write((sbyte)metadata.ManufacturerID);
-                    bw.Write((byte)screenBehavoiour);
+                    bw.Write((byte)screenBehaviour);
                     bw.Write((ushort)metadata.ScreenType);
                     bw.Write(metadata.BackLink);
-                    bw.Write((short)0);
                     bw.Write((int)metadata.BackgroundIndex);
                     bw.Write(gmllData);
                     bw.Flush();
