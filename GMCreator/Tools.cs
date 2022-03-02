@@ -82,7 +82,7 @@ namespace GMCreator
             ConvertImageTo(inputFileName, outputFileName, ConvertType.GTMP);
         }
 
-        private delegate void FileSplitter();
+        private delegate string FileSplitter();
 
         public static void SplitCommonPic(IWin32Window parent)
         {
@@ -98,7 +98,7 @@ namespace GMCreator
             }
             DebugLogger.Log("Tools", "Splitting and decomping CommonPic {0} to {1}", inputFileName, outputFolder);
             FileSplitter fs = () => {
-                GTMP.GTMPFile.ExplodeCommonPic(inputFileName, outputFolder, GTMP.GTMPFile.SplitCommonPicArgs.OutputPngPicture);
+                return GTMP.GTMPFile.ExplodeCommonPic(inputFileName, outputFolder, GTMP.GTMPFile.SplitCommonPicArgs.OutputPngPicture);
             };
             SplitFiles(fs, "Splitting " + Path.GetFileName(inputFileName));
         }
@@ -119,7 +119,7 @@ namespace GMCreator
             FileSplitter fs = () =>
             {
                 const GTMP.GMFile.SplitGTMenuFlags flags = GTMP.GMFile.SplitGTMenuFlags.OutputPngPicture;
-                GTMP.GMFile.SplitGTMenuDat(inputFileName, outputFolder, flags);
+                return GTMP.GMFile.SplitGTMenuDat(inputFileName, outputFolder, flags);
             };
             SplitFiles(fs, "Splitting " + Path.GetFileName(inputFileName));
         }
@@ -305,9 +305,10 @@ namespace GMCreator
             sw.Start();
             try
             {
-                stp.splitter();
+                string logText = stp.splitter();
+                DebugLogger.Log("Split", logText);
                 sw.Stop();
-                dlg.AllowClose("Completed in {0:F2} seconds", sw.Elapsed.TotalSeconds);
+                dlg.AllowClose(logText + "Completed in {0:F2} seconds", sw.Elapsed.TotalSeconds);
             }
             catch (Exception e)
             {

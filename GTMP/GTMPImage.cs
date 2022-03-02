@@ -88,7 +88,7 @@ namespace GTMP
                     // image if we don't set it
                     ushort origColour = GT2.Palette.GTMPSwizzleColour(tileAndPal);
                     pd.tile = (ushort)(origColour | 0x8000);
-#if !PRINT_PALETTES
+#if PRINT_PALETTES
                     Console.WriteLine("Solid tile of colour {0:x} at {1}x{2}", origColour, pd.x, pd.y);
 #endif
                     pd.palette = 0xFF;
@@ -431,6 +431,7 @@ namespace GTMP
             public byte[] data;
             public FileStream file;
             public SplitCommonPicArgs ops;
+            public StringBuilder log;
             public string picFileName;
             public RefCounter completionCount;
         }
@@ -441,8 +442,9 @@ namespace GTMP
             OutputPngPicture = 1
         }
 
-        public static void ExplodeCommonPic(string commonPicArc, string outDir, SplitCommonPicArgs opFlags)
+        public static string ExplodeCommonPic(string commonPicArc, string outDir, SplitCommonPicArgs opFlags)
         {
+            StringBuilder statusString = new StringBuilder();
             string idxFileName = Path.ChangeExtension(commonPicArc, ".idx");
             string pictureDir = null;
             RefCounter completionCount = new RefCounter();
@@ -476,6 +478,7 @@ namespace GTMP
                     aws.file = outFile;
                     aws.data = buffer;
                     aws.ops = opFlags;
+                    aws.log = statusString;
                     aws.completionCount = completionCount;
                     if ((opFlags & SplitCommonPicArgs.OutputPngPicture) != 0)
                     {
@@ -489,17 +492,29 @@ namespace GTMP
             {
                 System.Threading.Thread.Sleep(100);
             }
+            return statusString.ToString();
         }
 
         private static void DumpImage(object o)
         {
             AsyncWriteState aws = (AsyncWriteState)o;
-            using (FileStream fs = aws.file)
-            using (Bitmap bm = Parse(fs))
+            try
             {
-                if (bm != null)
+                using (FileStream fs = aws.file)
+                using (Bitmap bm = Parse(fs))
                 {
-                    bm.Save(aws.picFileName, ImageFormat.Png);
+                    if (bm != null)
+                    {
+                        bm.Save(aws.picFileName, ImageFormat.Png);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                lock (aws.log)
+                {
+                    aws.log.AppendFormat("Failed saving {0} because of excepton {1}({2})", aws.picFileName, e.Message, e.GetType().Name);
+                    aws.log.AppendLine();
                 }
             }
             aws.completionCount.Increment();
@@ -509,7 +524,18 @@ namespace GTMP
         {
             AsyncWriteState aws = (AsyncWriteState)res.AsyncState;
             FileStream fs = aws.file;
-            fs.EndWrite(res);
+            try
+            {
+                fs.EndWrite(res);
+            }
+            catch (Exception e)
+            {
+                lock (aws.log)
+                {
+                    aws.log.AppendFormat("Caught excepton {0} of type {1} writing file {2}", e.Message, e.GetType().Name, aws.file.Name);
+                    aws.log.AppendLine();
+                }
+            }
             if ((aws.ops & SplitCommonPicArgs.OutputPngPicture) != 0)
             {
                 fs.Position = 0;

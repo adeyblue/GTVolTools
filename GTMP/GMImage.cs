@@ -1176,6 +1176,7 @@ namespace GTMP
             private RefCounter completionCount;
             private RefCounter extraCount;
             private SplitGTMenuFlags opFlags;
+            private StringBuilder log;
 
             public FoundFileInfo(
                 int fNum, 
@@ -1185,7 +1186,8 @@ namespace GTMP
                 SplitGTMenuFlags flags,
                 string outputFile,
                 RefCounter completeCount, 
-                RefCounter exCount
+                RefCounter exCount,
+                StringBuilder logString
             )
             {
                 picDir = pictureFolder;
@@ -1196,6 +1198,7 @@ namespace GTMP
                 outFile = outputFile;
                 completionCount = completeCount;
                 extraCount = exCount;
+                log = logString;
             }
 
             public void WriteAndDecomp(object o)
@@ -1207,25 +1210,50 @@ namespace GTMP
                     MemoryStream compStream = new MemoryStream(fileData);
                     MemoryStream decompStream = new MemoryStream(fileData.Length * 2);
                     byte[] buffer = new byte[UInt16.MaxValue];
-                    using (ICSharpCode.SharpZipLib.GZip.GZipInputStream gzIn = new ICSharpCode.SharpZipLib.GZip.GZipInputStream(compStream))
+                    try
                     {
-                        ICSharpCode.SharpZipLib.Core.StreamUtils.Copy(gzIn, decompStream, buffer);
-                    }
-                    if ((opFlags & SplitGTMenuFlags.OutputDecompressed) != 0)
-                    {
-                        string decompFile = Path.Combine(decompDir, fileNum.ToString() + ".gm");
-                        File.WriteAllBytes(decompFile, decompStream.ToArray());
-                    }
-                    if ((opFlags & SplitGTMenuFlags.OutputPngPicture) != 0)
-                    {
-                        decompStream.Position = 0;
-                        GMFileInfo gmInf = GMFile.Parse(decompStream);
-                        using (Bitmap bm = gmInf.Image)
+                        using (ICSharpCode.SharpZipLib.GZip.GZipInputStream gzIn = new ICSharpCode.SharpZipLib.GZip.GZipInputStream(compStream))
                         {
-                            if (bm != null)
+                            ICSharpCode.SharpZipLib.Core.StreamUtils.Copy(gzIn, decompStream, buffer);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        opFlags &= ~(SplitGTMenuFlags.OutputDecompressed | SplitGTMenuFlags.OutputPngPicture);
+                        lock (log)
+                        {
+                            log.AppendFormat("Decompressing {0} failed due to error {1} of type {2}. File may be broken", Path.GetFileName(outFile), e.Message, e.GetType().Name);
+                            log.AppendLine();
+                        }
+                    }
+                    string fileWriting = null;
+                    try
+                    {
+                        if ((opFlags & SplitGTMenuFlags.OutputDecompressed) != 0)
+                        {
+                            fileWriting = Path.Combine(decompDir, fileNum.ToString() + ".gm");
+                            File.WriteAllBytes(fileWriting, decompStream.ToArray());
+                        }
+                        if ((opFlags & SplitGTMenuFlags.OutputPngPicture) != 0)
+                        {
+                            fileWriting = Path.Combine(picDir, fileNum.ToString() + ".gm.png");
+                            decompStream.Position = 0;
+                            GMFileInfo gmInf = GMFile.Parse(decompStream);
+                            using (Bitmap bm = gmInf.Image)
                             {
-                                bm.Save(Path.Combine(picDir, fileNum.ToString() + ".gm.png"), ImageFormat.Png);
+                                if (bm != null)
+                                {
+                                    bm.Save(fileWriting, ImageFormat.Png);
+                                }
                             }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        lock (log)
+                        {
+                            log.AppendFormat("Writing {0} failed due to error {1} of type {2}. File may be broken", fileWriting, e.Message, e.GetType().Name);
+                            log.AppendLine();
                         }
                     }
                     extraCount.Increment();
@@ -1235,7 +1263,18 @@ namespace GTMP
             private void FinishWrite(IAsyncResult res)
             {
                 completionCount.Increment();
-                wholeFile.EndWrite(res);
+                try
+                {
+                    wholeFile.EndWrite(res);
+                }
+                catch (Exception e)
+                {
+                    lock (log)
+                    {
+                        log.AppendFormat("Caught excepton {0} of type {1} writing file {2}", e.Message, e.GetType().Name, Path.GetFileName(outFile));
+                        log.AppendLine();
+                    }
+                }
                 wholeFile.Dispose();
             }
         }
@@ -1248,8 +1287,9 @@ namespace GTMP
             OutputPngPicture = 2
         }
 
-        public static void SplitGTMenuDat(string datFile, string outDir, SplitGTMenuFlags opFlags)
+        public static string SplitGTMenuDat(string datFile, string outDir, SplitGTMenuFlags opFlags)
         {
+            StringBuilder statusString = new StringBuilder();
             string idxFileName = Path.ChangeExtension(datFile, ".idx");
             string pictureDir = null, decompDir = null;
             RefCounter completeCount = new RefCounter();
@@ -1280,6 +1320,7 @@ namespace GTMP
                 long packFileSize = packFile.Length;
                 numIdxEntries = idxFile.ReadInt32();
 
+                long startPointLoc = idxFile.BaseStream.Position;
                 int startPointWithZeroes = idxFile.ReadInt32();
                 // the lower two bits o each index entry say how many padding bytes there
                 // are at the end of the file to pad the next entry to a multiple of 
@@ -1291,6 +1332,7 @@ namespace GTMP
                 int fileNameStart = outFileName.Length;
                 for (int i = 0; i < numIdxEntries; ++i)
                 {
+                    long endPointLoc = idxFile.BaseStream.Position;
                     int endPointWithZeroes = idxFile.ReadInt32();
                     int endPoint = (endPointWithZeroes & ~3);
                     int len = endPoint - startPoint - numToSubtract;
@@ -1299,9 +1341,10 @@ namespace GTMP
                     Buffer.BlockCopy(packFile, startPoint, buffer, 0, len);
                     outFileName.Length = fileNameStart;
                     outFileName.AppendFormat("{0}.gm", i);
-                    FoundFileInfo ffi = new FoundFileInfo(i, buffer, pictureDir, decompDir, opFlags, outFileName.ToString(), completeCount, extraCount);
+                    FoundFileInfo ffi = new FoundFileInfo(i, buffer, pictureDir, decompDir, opFlags, outFileName.ToString(), completeCount, extraCount, statusString);
                     ThreadPool.QueueUserWorkItem(new WaitCallback(ffi.WriteAndDecomp));
                     startPoint = endPoint;
+                    startPointLoc = endPointLoc;
                 }
             }
             while (!completeCount.HasReached(numIdxEntries))
@@ -1319,6 +1362,7 @@ namespace GTMP
             sw.Stop();
             Debug.WriteLine(String.Format("GTMP Extract and decomp took {0:F2} seconds", sw.Elapsed.TotalSeconds));
 #endif
+            return statusString.ToString();
         }
     }
 }
