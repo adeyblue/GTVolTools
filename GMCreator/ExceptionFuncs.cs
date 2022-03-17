@@ -31,9 +31,6 @@ namespace GMCreator
             string tempPath = Path.Combine(Path.GetTempPath(), "gmcreatorerror.txt");
             StringBuilder sb = new StringBuilder(2048);
             sb.AppendLine(titleLine);
-            sb.AppendLine("adeyblue@airesoft.co.uk attaching a screen cap of this message or");
-            sb.AppendFormat("the file at \"{0}\"", tempPath);
-            sb.AppendLine();
             sb.AppendLine("Exception Message:");
             sb.AppendLine(e.Message);
             sb.AppendLine();
