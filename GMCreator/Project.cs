@@ -278,7 +278,7 @@ namespace GMCreator
                     }
                     bw.Write((sbyte)metadata.ManufacturerID);
                     bw.Write((byte)screenBehaviour);
-                    bw.Write((ushort)metadata.ScreenType);
+                    bw.Write((ushort)metadata.Music);
                     bw.Write(metadata.BackLink);
                     bw.Write((int)metadata.BackgroundIndex);
                     bw.Write(gmllData);

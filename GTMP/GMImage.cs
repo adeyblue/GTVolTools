@@ -35,7 +35,7 @@ namespace GTMP
     //    end for
     //    sbyte manufacturerID;
     //    byte screenBehaviour; // is set to 2 on car rendering sceens, and 3 that need help to know where to go when pressing triangle
-    //    short screenType // no idea what importance this has, getting it 'wrong' doesn't seem to matter, but the values deffo are those in the ScreenType enum
+    //    short music // changes the music played on this screen
     //    int triangleLink; // the index of the GM screen you go to if you press triangle or square
     //    int backgroundGMFile; // the 0-based index of the background image for this top-layer in commonpic.dat (0 = first image, 1 = second, etc)
     //    byte[4] gmllString; // "GMLL"
@@ -509,20 +509,18 @@ namespace GTMP
             UseBigFont = 0x80 // draw the text in a bigger font
         }
 
-        // Not sure what the purpose of this is, but this seems to 
-        // be what this part of the metadata means
-        public enum ScreenType : ushort
+        public enum Music : ushort
         {
             CarWash = 0,
-            EastCityEvent = 1,
-            NorthCityEvent = 2,
-            SouthCityEvent = 3,
-            WestCityEvent = 4,
+            EastCity = 1,
+            NorthCity = 2,
+            SouthCity = 3,
+            WestCity = 4,
             GoRace = 5,
             Home = 6,
             WorldMap = 7,
             License = 8,
-            Other = 0xff
+            Unchanged = 0xff
         }
 
         public enum ManufacturerId : sbyte
@@ -713,7 +711,7 @@ namespace GTMP
                 ManufacturerID = ManufacturerId.None;
                 BackgroundIndex = -1;
                 BackLinkToPreviousScreen = false;
-                ScreenType = ScreenType.Other;
+                Music = Music.Unchanged;
             }
 
             [System.ComponentModel.Category("File Metadata")]
@@ -748,7 +746,7 @@ namespace GTMP
 
             [System.ComponentModel.Category("File Metadata")]
             [System.ComponentModel.Description("Type of screen")]
-            public ScreenType ScreenType
+            public Music Music
             {
                 get;
                 set;
@@ -757,12 +755,12 @@ namespace GTMP
             public override string ToString()
             {
                 return String.Format(
-                    "Metadata: BackLink = {0}, ManuID = {1}, BGIndex = {2}, BLToPrev = {3}, ScreenType = {4}",
+                    "Metadata: BackLink = {0}, ManuID = {1}, BGIndex = {2}, BLToPrev = {3}, Music = {4}",
                     BackLink,
                     ManufacturerID,
                     BackgroundIndex,
                     BackLinkToPreviousScreen,
-                    ScreenType
+                    Music
                 );
             }
         }
@@ -935,8 +933,8 @@ namespace GTMP
             // and those use 3 instead of 1 (no screen in the game has a screenBehaviour of 1. Only 0, 2 & 3)
             metadata.BackLinkToPreviousScreen = (screenBehaviour == 3);
             ++byteIter;
-            // unk
-            metadata.ScreenType = (ScreenType)BitConverter.ToInt16(fileData, byteIter);
+            // music played
+            metadata.Music = (Music)BitConverter.ToInt16(fileData, byteIter);
             byteIter += 2;
             // back link
             metadata.BackLink = BitConverter.ToInt32(fileData, byteIter);
