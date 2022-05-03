@@ -304,6 +304,9 @@ namespace GMCreator
             set;
         }
 
+        [Browsable(false)]
+        public byte[] UnknownClickButtonData { get; set; }
+
         public override void Draw(Graphics g, Rectangle clipRect, bool drawOutline)
         {
             Rectangle loc = Location;
@@ -391,11 +394,16 @@ namespace GMCreator
                     stream.Write(data, 0, data.Length); // 0x10
                     bytesWritten += data.Length;
                 }
+                else if (content == GTMP.GMFile.BoxItem.ClickButton)
+                {
+                    stream.Write(UnknownClickButtonData);
+                    bytesWritten += UnknownClickButtonData.Length;
+                }
             }
             // I wonder why the extradata section is 0x40 bytes big, when at most, 
-            // only about 10 can be used at once
+            // only about 16 can be used at once
             int zeroesToWrite = 0x4a - bytesWritten;
-            stream.Write(zeroes, 0, zeroesToWrite); // TODO: not correct - there is data here for ClickButtons that is not being persisted
+            stream.Write(zeroes, 0, zeroesToWrite);
             bytesWritten += zeroesToWrite;
 
             // last but one byte

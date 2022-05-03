@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -634,6 +635,15 @@ namespace GTMP
                     return (ShowArrowIfLicense)extraData[extraData.Length - 2];
                 }
                 else return ShowArrowIfLicense.None;
+            }
+
+            public byte[] GetUnknownClickButtonData()
+            {
+                if (contents == BoxItem.ClickButton)
+                {
+                    return extraData.Skip(4).Take(12).ToArray();
+                }
+                return new byte[0];
             }
 
             public override string ToString()

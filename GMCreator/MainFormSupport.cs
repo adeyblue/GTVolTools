@@ -244,6 +244,7 @@ namespace GMCreator
                     newBox.Contents = infoBox.contents;
                     newBox.QueryAttributes = infoBox.queryType;
                     newBox.ArrowEnabler = infoBox.GetArrowEnablingLicense();
+                    newBox.UnknownClickButtonData = infoBox.GetUnknownClickButtonData();
                     toAdd = newBox;
                 }
                 else
