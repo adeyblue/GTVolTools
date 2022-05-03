@@ -58,7 +58,7 @@ namespace GMCreator
             SeparateBoxes(boxes, out gmp.boxes, out gmp.iconBoxes);
             string projectFile = Json.Serialize(gmp);
 #if DEBUG
-            File.WriteAllText(@"T:\gmpproj.txt", projectFile);
+            File.WriteAllText(Path.Combine(Globals.DebugOutputPath, "gmpproj.txt"), projectFile);
 #endif
             MemoryStream compProj = Compress.ZipCompressString(projectFile);
             File.WriteAllBytes(fileName, compProj.ToArray());
@@ -286,7 +286,7 @@ namespace GMCreator
 
                     ms.Position = 0;
 #if DEBUG
-                    File.WriteAllBytes(@"T:\uncompressedgm.gm", ms.ToArray());
+                    File.WriteAllBytes(Path.Combine(Globals.DebugOutputPath, "uncompressedgm.gm"), ms.ToArray());
 #endif
                     MemoryStream compressed = Compress.GZipCompressStream(ms);
                     byte[] compressedBytes = compressed.ToArray();

@@ -798,7 +798,7 @@ namespace GMCreator
             string pngDirectory = Path.Combine(inDir, "bmp");
             dlg.UpdateStatus("Recompressing {0} files", numFiles);
             string outDir = rta.outDir;
-            string gmllFile = @"T:\out.gmll";
+            string gmllFile = Path.Combine(Globals.DebugOutputPath, "out.gmll");
             for (int i = 0; i < numFiles; ++i)
             {
                 Box.ResetIndexCount();
@@ -916,7 +916,7 @@ namespace GMCreator
         void checkGameFileValidity_Click(object sender, EventArgs e)
         {
             //string dir = PickFolder(this, "Open dir with GM files");
-            string dir = @"T:\gt2\gtmenu\pics\GTMenuDatDecomp";
+            string dir = @"gt2\gtmenu\pics\GTMenuDatDecomp";
             if (!String.IsNullOrEmpty(dir))
             {
                 using (WaitDlg dlg = new WaitDlg("Checking GM Files"))
