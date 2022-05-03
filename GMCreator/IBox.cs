@@ -22,6 +22,12 @@ namespace GMCreator
             ResizePointBR = ResizePointBottomBit | ResizePointRightBit // where a click and drag will resize the box. TopLeft-BottomRight corners
         }
 
+        abstract public int Group
+        {
+            get;
+            set;
+        }
+
         abstract public string Name
         {
             get;

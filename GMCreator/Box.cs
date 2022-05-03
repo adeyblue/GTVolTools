@@ -149,6 +149,14 @@ namespace GMCreator
             cornerAnchors[3] = new Rectangle((locLeft + locWidth) - halfAnchorWidth, (locTop + locHeight) - halfAnchorHeight, resizeAnchorW, resizeAnchorH);
         }
 
+        [Category("A - Required")]
+        [Description("The group that the box is contained in")]
+        public override int Group
+        {
+            get;
+            set;
+        }
+
         [Category("C - Non-Game")]
         [Description("Colour to draw the outline of the box")]
         public Color OutlineColour
@@ -387,7 +395,7 @@ namespace GMCreator
             // I wonder why the extradata section is 0x40 bytes big, when at most, 
             // only about 10 can be used at once
             int zeroesToWrite = 0x4a - bytesWritten;
-            stream.Write(zeroes, 0, zeroesToWrite);
+            stream.Write(zeroes, 0, zeroesToWrite); // TODO: not correct - there is data here for ClickButtons that is not being persisted
             bytesWritten += zeroesToWrite;
 
             // last but one byte

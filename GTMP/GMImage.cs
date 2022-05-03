@@ -683,18 +683,22 @@ namespace GTMP
             public IconImageBox iconImgBox;
             public Rectangle rect;
             public Pen rectDrawColour;
-            public DrawRectInfo(InfoBox cpIn, Pen rectColour)
+            public int Group { get; set; }
+
+            public DrawRectInfo(InfoBox cpIn, Pen rectColour, int group)
             {
                 infoBox = cpIn;
                 rect = new Rectangle(cpIn.x1, cpIn.y1, cpIn.x2 - cpIn.x1, cpIn.y2 - cpIn.y1);
                 rectDrawColour = rectColour;
+                Group = group;
             }
 
-            public DrawRectInfo(IconImageBox sbIn, Pen rectColour)
+            public DrawRectInfo(IconImageBox sbIn, Pen rectColour, int group)
             {
                 iconImgBox = sbIn;
                 rect = new Rectangle(sbIn.screenX, sbIn.screenY, sbIn.width, sbIn.height);
                 rectDrawColour = rectColour;
+                Group = group;
             }
 
             public override string ToString()
@@ -798,7 +802,7 @@ namespace GTMP
             }
         }
 
-        static int ParseSimpleBoxes(int numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter)
+        static int ParseSimpleBoxes(int numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter, int group)
         {
             int isInteresting = 0;
             Type simpleBoxType = typeof(IconImageBox);
@@ -808,7 +812,7 @@ namespace GTMP
             {
                 IntPtr pSimpleBox = new IntPtr(pFileData + byteIter);
                 IconImageBox box = (IconImageBox)Marshal.PtrToStructure(pSimpleBox, simpleBoxType);
-                DrawRectInfo dri = new DrawRectInfo(box, rectColour);
+                DrawRectInfo dri = new DrawRectInfo(box, rectColour, group);
                 rects.Add(dri);
                 Debug.Assert(box.unk3 == 0xb);
 #if !GMCREATOR
@@ -834,7 +838,7 @@ namespace GTMP
             return isInteresting;
         }
 
-        static int ParseInfoBoxes(uint numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter)
+        static int ParseInfoBoxes(uint numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter, int group)
         {
             Type infoBoxType = typeof(InfoBox);
             int infoBoxSize = Marshal.SizeOf(infoBoxType);
@@ -845,7 +849,7 @@ namespace GTMP
             {
                 IntPtr pInfoBox = new IntPtr(pFileData + byteIter);
                 InfoBox cp = (InfoBox)Marshal.PtrToStructure(pInfoBox, infoBoxType);
-                DrawRectInfo cri = new DrawRectInfo(cp, rectColour);
+                DrawRectInfo cri = new DrawRectInfo(cp, rectColour, group);
                 rects.Add(cri);
 #if !GMCREATOR
                 sw.WriteLine(
@@ -898,8 +902,8 @@ namespace GTMP
                     byteIter += 2;
                     ushort numInfoBoxes = BitConverter.ToUInt16(fileData, byteIter);
                     byteIter += 2;
-                    interestingAttributes += ParseSimpleBoxes(numSimpleBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter);
-                    interestingAttributes += ParseInfoBoxes(numInfoBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter);
+                    interestingAttributes += ParseSimpleBoxes(numSimpleBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter, i);
+                    interestingAttributes += ParseInfoBoxes(numInfoBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter, i);
                 }
                 // the others counts being 2-byte iconBoxes then 2-byte infoBoxes
                 // makes this as a single 4-byte count of infoBoxes
@@ -908,7 +912,7 @@ namespace GTMP
                 Debug.Assert((numOfInfoBoxes >> 16) == 0);
                 byteIter += 4;
                 Pen nonGroupRectColour = Pens.White;
-                interestingAttributes += ParseInfoBoxes(numOfInfoBoxes, rects, pFileData, nonGroupRectColour, log, ref byteIter);
+                interestingAttributes += ParseInfoBoxes(numOfInfoBoxes, rects, pFileData, nonGroupRectColour, log, ref byteIter, -1);
 #if !GMCREATOR && !PRINTALLBOXES
                 if (interestingAttributes > 0)
                 {

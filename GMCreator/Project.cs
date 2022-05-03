@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace GMCreator
@@ -197,55 +198,18 @@ namespace GMCreator
                 using (MemoryStream ms = new MemoryStream(15000))
                 using (BinaryWriter bw = new BinaryWriter(ms))
                 {
-                    // the game files never have more than four iconimgs
-                    // in one box group, it seems to handle more than that
-                    // perfectly fine, so we make slightly smaller files by not
-                    // splitting them up like that
-                    int numIcons = icons.Count;
-                    int numBigBoxes = bigBoxes.Count;
-                    //int curIcon = 0;
-                    //int curBigBox = 0;
-                    //int boxGroups = numIcons / 4;
-
+                    int numGroups = boxes.Max(box => box.Group) + 1;
                     bw.Write(Encoding.ASCII.GetBytes("GM\x3\x0"));
-                    bw.Write(numIcons > 0 ? 1 : 0); // 0x4
+                    bw.Write(numGroups); // 0x4
 
-                    if (numIcons > 0)
+                    if (icons.Any() || bigBoxes.Any())
                     {
-                        bw.Write(numIcons);
-                        foreach (IconImgBox icon in icons)
+                        for (int i = 0; i < numGroups; i++)
                         {
-                            icon.Serialize(bw);
+                            ExportBoxGroup(bw, icons, bigBoxes, i);
                         }
+                        ExportUngroupedBoxes(bw, icons, bigBoxes);
                     }
-
-                    // if anybody ever wants to write files with the 4 iconimg per group
-                    // here it is, don't forget to comment out the above, or it won't work right
-                    // if(numIcons > 0)
-                    //{
-                    //do
-                    //{
-                    //    int iconsToWrite = Math.Min(4, numIcons);
-                    //    int bigBoxesToWrite = Math.Min(4, numBigBoxes);
-                    //    bw.Write((ushort)iconsToWrite);
-                    //    bw.Write((ushort)bigBoxesToWrite);
-                    //    for (int i = 0; i < iconsToWrite; ++i)
-                    //    {
-                    //        icons[0].Serialize(bw);
-                    //        icons.RemoveAt(0);
-                    //    }
-                    //    for(int i = 0; i < bigBoxesToWrite; ++i)
-                    //    {
-                    //        bigBoxes[0].Serialise(bw);
-                    //        bigBoxes.RemoveAt(0);
-                    //    }
-                    //    numIcons -= iconsToWrite;
-                    //    numBigBoxes -= bigBoxesToWrite;
-                    //}
-                    //while (numIcons != 0);
-                    //}
-
-                    bw.Write(numBigBoxes);
 
                     // if any box is a CarDisplay, set flag 2 in the metadata flags
                     // check for more than one box with the default cursor position attribute
@@ -268,7 +232,6 @@ namespace GMCreator
                                 throw new InvalidBoxStateException("More than one box has the DefaultCursorPos BehaviourAttribute set", b);
                             }
                         }
-                        b.Serialize(bw);
                     }
 
                     int screenBehaviour = (numCars != 0) ? 2 : 0;
@@ -300,6 +263,43 @@ namespace GMCreator
                     System.Windows.Forms.MessageBoxIcon.Error,
                     ibse.Message
                 );
+            }
+        }
+
+        private static void ExportBoxGroup(BinaryWriter bw, List<IconImgBox> icons, List<Box> bigBoxes, int group)
+        {
+            IconImgBox[] groupIcons = icons.Where(box => box.Group == group).ToArray();
+            Box[] groupBigBoxes = bigBoxes.Where(box => box.Group == group).ToArray();
+            if (groupIcons.Any() || groupBigBoxes.Any())
+            {
+                bw.Write((ushort)groupIcons.Length);
+                bw.Write((ushort)groupBigBoxes.Length);
+                for (int j = 0; j < groupIcons.Length; ++j)
+                {
+                    groupIcons[j].Serialize(bw);
+                }
+                for (int j = 0; j < groupBigBoxes.Length; ++j)
+                {
+                    groupBigBoxes[j].Serialize(bw);
+                }
+            }
+        }
+
+        private static void ExportUngroupedBoxes(BinaryWriter bw, List<IconImgBox> icons, List<Box> bigBoxes)
+        {
+            IconImgBox[] groupIcons = icons.Where(box => box.Group == -1).ToArray();
+            Box[] groupBigBoxes = bigBoxes.Where(box => box.Group == -1).ToArray();
+            if (groupIcons.Any())
+            {
+                throw new InvalidBoxStateException("IconImg boxes must be in a group of 0 or higher", groupIcons.First());
+            }
+            else if (groupBigBoxes.Any())
+            {
+                bw.Write((uint)groupBigBoxes.Length);
+                for (int j = 0; j < groupBigBoxes.Length; ++j)
+                {
+                    groupBigBoxes[j].Serialize(bw);
+                }
             }
         }
     }

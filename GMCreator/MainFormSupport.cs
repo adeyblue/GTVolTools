@@ -236,6 +236,7 @@ namespace GMCreator
                 {
                     GTMP.GMFile.InfoBox infoBox = dri.infoBox;
                     Box newBox = new Box(dri.rect);
+                    newBox.Group = dri.Group;
                     newBox.BehaviourAttributes = infoBox.attributes;
                     newBox.LinkToScreen = infoBox.GetScreenLink();
                     newBox.PrizeMoneyPosition = infoBox.GetSpecificPlaceNumber();
@@ -253,6 +254,7 @@ namespace GMCreator
                     if (foundIcon != null)
                     {
                         IconImgBox newBox = new IconImgBox(foundIcon);
+                        newBox.Group = dri.Group;
                         newBox.Location = new Point(imgBox.screenX, imgBox.screenY);
                         toAdd = newBox;
                     }

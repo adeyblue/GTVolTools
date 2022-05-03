@@ -56,6 +56,14 @@ namespace GMCreator
             DoAfterConstruction();
         }
 
+        [Category("A - Required")]
+        [Description("The group that the box is contained in")]
+        public override int Group
+        {
+            get;
+            set;
+        }
+
         [Category("B - Non-Game")]
         [Description("Friendly name of this box")]
         public override string Name
