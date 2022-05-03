@@ -389,7 +389,7 @@ namespace GMCreator
                 bytesWritten += 4;
                 if (content == GTMP.GMFile.BoxItem.DealershipNewCarBox)
                 {
-                    int carId = Int32.Parse(carRaceWheelId, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture);
+                    uint carId = GTMP.CarNameConversion.ToCarID(carRaceWheelId);
                     byte[] data = BitConverter.GetBytes(carId);
                     stream.Write(data, 0, data.Length); // 0x10
                     bytesWritten += data.Length;
@@ -627,10 +627,10 @@ namespace GMCreator
                 string validEntryRegex = "^[A-Z0-9a-z]+$";
                 if(content == GTMP.GMFile.BoxItem.DealershipNewCarBox)
                 {
-                    // car ids are 4 byte hex numbers, so 8 (or 7 with a starting 0) characters in length
-                    // they can also only comprise of hex digits 
-                    minLength = 7;
-                    validEntryRegex = "^[A-Fa-f0-9]+$";
+                    // car ids are 4 byte hex hashes of a 5-character lower-case ASCII string, so 5 characters in length
+                    // they can also only comprise of digits, lower-case letters, and hyphens
+                    maxLength = 5;
+                    validEntryRegex = "^[0-9a-z\\-]+$";
                 }
                 else if ((infoAttrs & GTMP.GMFile.InfoBoxAttributes.FitWheel) != 0)
                 {
@@ -649,7 +649,7 @@ namespace GMCreator
                 }
                 else
                 {
-                    ThrowInvalidState("CarOrRaceOrWheelId is set but no Contents or BehaviourAttributes that would uae it");
+                    ThrowInvalidState("CarOrRaceOrWheelId is set but no Contents or BehaviourAttributes that would use it");
                 }
                 int idLength = carRaceOrWheelId.Length;
                 if ((idLength < minLength) || (idLength > maxLength))

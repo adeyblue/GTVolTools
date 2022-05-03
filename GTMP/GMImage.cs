@@ -612,7 +612,7 @@ namespace GTMP
                 if (contents == BoxItem.DealershipNewCarBox)
                 {
                     uint carId = BitConverter.ToUInt32(extraData, 4);
-                    name = carId.ToString("X");
+                    name = CarNameConversion.ToCarName(carId);
                 }
                 // not allowed a screenlink with these attributes
                 else if ((attributes & (InfoBoxAttributes.FitWheel | InfoBoxAttributes.RaceMode)) != 0)
@@ -1375,6 +1375,39 @@ namespace GTMP
             Debug.WriteLine(String.Format("GTMP Extract and decomp took {0:F2} seconds", sw.Elapsed.TotalSeconds));
 #endif
             return statusString.ToString();
+        }
+    }
+
+    public static class CarNameConversion
+    {
+        private static readonly List<char> characterSet =
+            new List<char> { '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+
+        public static string ToCarName(this uint carID)
+        {
+            string carName = "";
+
+            for (int i = 0; i < 5; i++)
+            {
+                uint currentCharNo = (carID >> (i * 6)) & 0x3F;
+                carName = characterSet[(int)currentCharNo] + carName;
+            }
+
+            return carName;
+        }
+
+        public static uint ToCarID(this string carName)
+        {
+            char[] carNameChars = carName.ToCharArray();
+            long carID = 0;
+
+            foreach (char carNameChar in carNameChars)
+            {
+                carID += characterSet.IndexOf(carNameChar);
+                carID <<= 6;
+            }
+            carID >>= 6;
+            return (uint)carID;
         }
     }
 }
