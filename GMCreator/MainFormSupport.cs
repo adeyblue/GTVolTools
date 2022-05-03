@@ -132,7 +132,7 @@ namespace GMCreator
 
         private void LoadAndDisplayFile(PostImageLoad afterLoadFn)
         {
-            const string imageFilter = "Image Files (*.bmp, *.png, *.jpg)|*.bmp;*.png;*.jpg|GT2 Files (*.gtmp, *.gm, *.gz)|*.gtmp;*.gm;*.gz|All Files (*.*)|*.*";
+            const string imageFilter = "GT2 Files (*.gtmp, *.gm, *.gz)|*.gtmp;*.gm;*.gz|Image Files (*.bmp, *.png, *.jpg)|*.bmp;*.png;*.jpg|All Files (*.*)|*.*";
             string fileName = GetOpenFileName(this, "Open an image", imageFilter, null);
             if (String.IsNullOrEmpty(fileName))
             {
