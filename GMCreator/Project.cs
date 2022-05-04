@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace GMCreator
 {
@@ -18,10 +20,13 @@ namespace GMCreator
         public List<Box> boxes;
         public GTMP.GMFile.GMMetadata fileMetadata;
         public IconImgType gt2BoxVersion;
+        public int version;
     }
 
     static class GMProject
     {
+        private const int ProjectFileFormatVersion = 2;
+
         public static void SeparateBoxes(List<IBox> boxes, out List<Box> bigBoxes, out List<IconImgBox> iconBoxes)
         {
             bigBoxes = new List<Box>(boxes.Count);
@@ -56,6 +61,7 @@ namespace GMCreator
             gmp.background = Convert.ToBase64String(imageData);
             gmp.fileMetadata = metadata;
             gmp.gt2BoxVersion = fileVersion;
+            gmp.version = ProjectFileFormatVersion;
             SeparateBoxes(boxes, out gmp.boxes, out gmp.iconBoxes);
             string projectFile = Json.Serialize(gmp);
 #if DEBUG
@@ -89,6 +95,12 @@ namespace GMCreator
             }
             string jsonText = Encoding.UTF8.GetString(projectBytes);
             GMSerializedProject projectData = Json.Parse<GMSerializedProject>(jsonText);
+
+            if (projectData.version < ProjectFileFormatVersion)
+            {
+                MigrateProjectData(jsonText, projectData);
+            }
+
             IconImgType projType = projectData.gt2BoxVersion;
             IconImgType currentType = Globals.App.GT2Version;
 
@@ -133,6 +145,28 @@ namespace GMCreator
                 boxes.Add(box);
             }
             return true;
+        }
+
+        private static void MigrateProjectData(string jsonText, GMSerializedProject projectData)
+        {
+            if (projectData.version < 2)
+            {
+                var oldProperty = JsonConvert.DeserializeAnonymousType(jsonText, new { fileMetadata = new { ScreenType = GTMP.GMFile.Music.Unchanged } });
+                projectData.fileMetadata.Music = oldProperty.fileMetadata.ScreenType;
+            }
+
+            foreach (Box box in projectData.boxes)
+            {
+                MigrateBoxData(box, projectData.version);
+            }
+        }
+
+        private static void MigrateBoxData(Box box, int version)
+        {
+            if (version < 2 && box.Contents == GTMP.GMFile.BoxItem.DealershipNewCarBox && !string.IsNullOrEmpty(box.RaceOrWheelOrCarId))
+            {
+                box.RaceOrWheelOrCarId = GTMP.CarNameConversion.ToCarName(uint.Parse(box.RaceOrWheelOrCarId, NumberStyles.HexNumber, CultureInfo.InvariantCulture));
+            }
         }
 
         internal static void DeleteFileLoop(string fileName)
