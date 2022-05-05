@@ -15,6 +15,13 @@ namespace GMCreator
         private void InitializeGlobals(string appDir)
         {
             Globals.Load(appDir);
+            string dataDir = Path.Combine(appDir, "data") + Path.DirectorySeparatorChar;
+            if (!Directory.Exists(dataDir))
+            {
+                DebugLogger.Log("Hardcoded", "No data directory found!");
+                MessageBox.Show("data directory not found, GMCreator cannot load", "GMCreator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
             if (Globals.App.GT2Version == IconImgType.Invalid)
             {
                 using (SettingsForm sf = new SettingsForm())
