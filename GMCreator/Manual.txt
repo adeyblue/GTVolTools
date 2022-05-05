@@ -296,9 +296,9 @@ ManufacturerId
 This seems to be mainly for file grouping purposes EXCEPT when there is a DealershipTuneButton on the screen. In that case, you must be in a car from this manufacturer or the game will show the 'Your car cannot be tuned here' message when you click that button
 
 
-ScreenType
+Music
 ------------------------
-Seems to be mainly informational, doesn't functionally change anything as far as I can tell.
+Starts the selected music track when this screen is entered, if it isn't already playing. Set to Unchanged to keep playing the current music, whatever it is
 
 
 ***************************

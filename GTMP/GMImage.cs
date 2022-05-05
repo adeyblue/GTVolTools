@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -35,7 +36,7 @@ namespace GTMP
     //    end for
     //    sbyte manufacturerID;
     //    byte screenBehaviour; // is set to 2 on car rendering sceens, and 3 that need help to know where to go when pressing triangle
-    //    short screenType // no idea what importance this has, getting it 'wrong' doesn't seem to matter, but the values deffo are those in the ScreenType enum
+    //    short music // changes the music played on this screen
     //    int triangleLink; // the index of the GM screen you go to if you press triangle or square
     //    int backgroundGMFile; // the 0-based index of the background image for this top-layer in commonpic.dat (0 = first image, 1 = second, etc)
     //    byte[4] gmllString; // "GMLL"
@@ -509,20 +510,18 @@ namespace GTMP
             UseBigFont = 0x80 // draw the text in a bigger font
         }
 
-        // Not sure what the purpose of this is, but this seems to 
-        // be what this part of the metadata means
-        public enum ScreenType : ushort
+        public enum Music : ushort
         {
             CarWash = 0,
-            EastCityEvent = 1,
-            NorthCityEvent = 2,
-            SouthCityEvent = 3,
-            WestCityEvent = 4,
+            EastCity = 1,
+            NorthCity = 2,
+            SouthCity = 3,
+            WestCity = 4,
             GoRace = 5,
             Home = 6,
             WorldMap = 7,
             License = 8,
-            Other = 0xff
+            Unchanged = 0xff
         }
 
         public enum ManufacturerId : sbyte
@@ -613,7 +612,7 @@ namespace GTMP
                 if (contents == BoxItem.DealershipNewCarBox)
                 {
                     uint carId = BitConverter.ToUInt32(extraData, 4);
-                    name = carId.ToString("X");
+                    name = CarNameConversion.ToCarName(carId);
                 }
                 // not allowed a screenlink with these attributes
                 else if ((attributes & (InfoBoxAttributes.FitWheel | InfoBoxAttributes.RaceMode)) != 0)
@@ -636,6 +635,15 @@ namespace GTMP
                     return (ShowArrowIfLicense)extraData[extraData.Length - 2];
                 }
                 else return ShowArrowIfLicense.None;
+            }
+
+            public byte[] GetUnknownClickButtonData()
+            {
+                if (contents == BoxItem.ClickButton)
+                {
+                    return extraData.Skip(4).Take(12).ToArray();
+                }
+                return new byte[0];
             }
 
             public override string ToString()
@@ -685,18 +693,22 @@ namespace GTMP
             public IconImageBox iconImgBox;
             public Rectangle rect;
             public Pen rectDrawColour;
-            public DrawRectInfo(InfoBox cpIn, Pen rectColour)
+            public int Group { get; set; }
+
+            public DrawRectInfo(InfoBox cpIn, Pen rectColour, int group)
             {
                 infoBox = cpIn;
                 rect = new Rectangle(cpIn.x1, cpIn.y1, cpIn.x2 - cpIn.x1, cpIn.y2 - cpIn.y1);
                 rectDrawColour = rectColour;
+                Group = group;
             }
 
-            public DrawRectInfo(IconImageBox sbIn, Pen rectColour)
+            public DrawRectInfo(IconImageBox sbIn, Pen rectColour, int group)
             {
                 iconImgBox = sbIn;
                 rect = new Rectangle(sbIn.screenX, sbIn.screenY, sbIn.width, sbIn.height);
                 rectDrawColour = rectColour;
+                Group = group;
             }
 
             public override string ToString()
@@ -713,7 +725,7 @@ namespace GTMP
                 ManufacturerID = ManufacturerId.None;
                 BackgroundIndex = -1;
                 BackLinkToPreviousScreen = false;
-                ScreenType = ScreenType.Other;
+                Music = Music.Unchanged;
             }
 
             [System.ComponentModel.Category("File Metadata")]
@@ -748,7 +760,7 @@ namespace GTMP
 
             [System.ComponentModel.Category("File Metadata")]
             [System.ComponentModel.Description("Type of screen")]
-            public ScreenType ScreenType
+            public Music Music
             {
                 get;
                 set;
@@ -757,12 +769,12 @@ namespace GTMP
             public override string ToString()
             {
                 return String.Format(
-                    "Metadata: BackLink = {0}, ManuID = {1}, BGIndex = {2}, BLToPrev = {3}, ScreenType = {4}",
+                    "Metadata: BackLink = {0}, ManuID = {1}, BGIndex = {2}, BLToPrev = {3}, Music = {4}",
                     BackLink,
                     ManufacturerID,
                     BackgroundIndex,
                     BackLinkToPreviousScreen,
-                    ScreenType
+                    Music
                 );
             }
         }
@@ -800,7 +812,7 @@ namespace GTMP
             }
         }
 
-        static int ParseSimpleBoxes(int numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter)
+        static int ParseSimpleBoxes(int numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter, int group)
         {
             int isInteresting = 0;
             Type simpleBoxType = typeof(IconImageBox);
@@ -810,7 +822,7 @@ namespace GTMP
             {
                 IntPtr pSimpleBox = new IntPtr(pFileData + byteIter);
                 IconImageBox box = (IconImageBox)Marshal.PtrToStructure(pSimpleBox, simpleBoxType);
-                DrawRectInfo dri = new DrawRectInfo(box, rectColour);
+                DrawRectInfo dri = new DrawRectInfo(box, rectColour, group);
                 rects.Add(dri);
                 Debug.Assert(box.unk3 == 0xb);
 #if !GMCREATOR
@@ -836,7 +848,7 @@ namespace GTMP
             return isInteresting;
         }
 
-        static int ParseInfoBoxes(uint numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter)
+        static int ParseInfoBoxes(uint numBoxes, List<DrawRectInfo> rects, long pFileData, Pen rectColour, StreamWriter sw, ref int byteIter, int group)
         {
             Type infoBoxType = typeof(InfoBox);
             int infoBoxSize = Marshal.SizeOf(infoBoxType);
@@ -847,7 +859,7 @@ namespace GTMP
             {
                 IntPtr pInfoBox = new IntPtr(pFileData + byteIter);
                 InfoBox cp = (InfoBox)Marshal.PtrToStructure(pInfoBox, infoBoxType);
-                DrawRectInfo cri = new DrawRectInfo(cp, rectColour);
+                DrawRectInfo cri = new DrawRectInfo(cp, rectColour, group);
                 rects.Add(cri);
 #if !GMCREATOR
                 sw.WriteLine(
@@ -900,8 +912,8 @@ namespace GTMP
                     byteIter += 2;
                     ushort numInfoBoxes = BitConverter.ToUInt16(fileData, byteIter);
                     byteIter += 2;
-                    interestingAttributes += ParseSimpleBoxes(numSimpleBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter);
-                    interestingAttributes += ParseInfoBoxes(numInfoBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter);
+                    interestingAttributes += ParseSimpleBoxes(numSimpleBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter, i);
+                    interestingAttributes += ParseInfoBoxes(numInfoBoxes, rects, pFileData, rectGroupColours[i], log, ref byteIter, i);
                 }
                 // the others counts being 2-byte iconBoxes then 2-byte infoBoxes
                 // makes this as a single 4-byte count of infoBoxes
@@ -910,7 +922,7 @@ namespace GTMP
                 Debug.Assert((numOfInfoBoxes >> 16) == 0);
                 byteIter += 4;
                 Pen nonGroupRectColour = Pens.White;
-                interestingAttributes += ParseInfoBoxes(numOfInfoBoxes, rects, pFileData, nonGroupRectColour, log, ref byteIter);
+                interestingAttributes += ParseInfoBoxes(numOfInfoBoxes, rects, pFileData, nonGroupRectColour, log, ref byteIter, -1);
 #if !GMCREATOR && !PRINTALLBOXES
                 if (interestingAttributes > 0)
                 {
@@ -935,8 +947,8 @@ namespace GTMP
             // and those use 3 instead of 1 (no screen in the game has a screenBehaviour of 1. Only 0, 2 & 3)
             metadata.BackLinkToPreviousScreen = (screenBehaviour == 3);
             ++byteIter;
-            // unk
-            metadata.ScreenType = (ScreenType)BitConverter.ToInt16(fileData, byteIter);
+            // music played
+            metadata.Music = (Music)BitConverter.ToInt16(fileData, byteIter);
             byteIter += 2;
             // back link
             metadata.BackLink = BitConverter.ToInt32(fileData, byteIter);
@@ -1363,6 +1375,39 @@ namespace GTMP
             Debug.WriteLine(String.Format("GTMP Extract and decomp took {0:F2} seconds", sw.Elapsed.TotalSeconds));
 #endif
             return statusString.ToString();
+        }
+    }
+
+    public static class CarNameConversion
+    {
+        private static readonly List<char> characterSet =
+            new List<char> { '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+
+        public static string ToCarName(this uint carID)
+        {
+            string carName = "";
+
+            for (int i = 0; i < 5; i++)
+            {
+                uint currentCharNo = (carID >> (i * 6)) & 0x3F;
+                carName = characterSet[(int)currentCharNo] + carName;
+            }
+
+            return carName;
+        }
+
+        public static uint ToCarID(this string carName)
+        {
+            char[] carNameChars = carName.ToCharArray();
+            long carID = 0;
+
+            foreach (char carNameChar in carNameChars)
+            {
+                carID += characterSet.IndexOf(carNameChar);
+                carID <<= 6;
+            }
+            carID >>= 6;
+            return (uint)carID;
         }
     }
 }

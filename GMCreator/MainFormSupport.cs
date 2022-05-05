@@ -15,6 +15,13 @@ namespace GMCreator
         private void InitializeGlobals(string appDir)
         {
             Globals.Load(appDir);
+            string dataDir = Path.Combine(appDir, "data") + Path.DirectorySeparatorChar;
+            if (!Directory.Exists(dataDir))
+            {
+                DebugLogger.Log("Hardcoded", "No data directory found!");
+                MessageBox.Show("data directory not found, GMCreator cannot load", "GMCreator", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
             if (Globals.App.GT2Version == IconImgType.Invalid)
             {
                 using (SettingsForm sf = new SettingsForm())
@@ -132,7 +139,7 @@ namespace GMCreator
 
         private void LoadAndDisplayFile(PostImageLoad afterLoadFn)
         {
-            const string imageFilter = "Image Files (*.bmp, *.png, *.jpg)|*.bmp;*.png;*.jpg|GT2 Files (*.gtmp, *.gm, *.gz)|*.gtmp;*.gm;*.gz|All Files (*.*)|*.*";
+            const string imageFilter = "GT2 Files (*.gtmp, *.gm, *.gz)|*.gtmp;*.gm;*.gz|Image Files (*.bmp, *.png, *.jpg)|*.bmp;*.png;*.jpg|All Files (*.*)|*.*";
             string fileName = GetOpenFileName(this, "Open an image", imageFilter, null);
             if (String.IsNullOrEmpty(fileName))
             {
@@ -236,6 +243,7 @@ namespace GMCreator
                 {
                     GTMP.GMFile.InfoBox infoBox = dri.infoBox;
                     Box newBox = new Box(dri.rect);
+                    newBox.Group = dri.Group;
                     newBox.BehaviourAttributes = infoBox.attributes;
                     newBox.LinkToScreen = infoBox.GetScreenLink();
                     newBox.PrizeMoneyPosition = infoBox.GetSpecificPlaceNumber();
@@ -243,6 +251,7 @@ namespace GMCreator
                     newBox.Contents = infoBox.contents;
                     newBox.QueryAttributes = infoBox.queryType;
                     newBox.ArrowEnabler = infoBox.GetArrowEnablingLicense();
+                    newBox.UnknownClickButtonData = infoBox.GetUnknownClickButtonData();
                     toAdd = newBox;
                 }
                 else
@@ -253,6 +262,7 @@ namespace GMCreator
                     if (foundIcon != null)
                     {
                         IconImgBox newBox = new IconImgBox(foundIcon);
+                        newBox.Group = dri.Group;
                         newBox.Location = new Point(imgBox.screenX, imgBox.screenY);
                         toAdd = newBox;
                     }
@@ -798,7 +808,7 @@ namespace GMCreator
             string pngDirectory = Path.Combine(inDir, "bmp");
             dlg.UpdateStatus("Recompressing {0} files", numFiles);
             string outDir = rta.outDir;
-            string gmllFile = @"T:\out.gmll";
+            string gmllFile = Path.Combine(Globals.DebugOutputPath, "out.gmll");
             for (int i = 0; i < numFiles; ++i)
             {
                 Box.ResetIndexCount();
@@ -916,7 +926,7 @@ namespace GMCreator
         void checkGameFileValidity_Click(object sender, EventArgs e)
         {
             //string dir = PickFolder(this, "Open dir with GM files");
-            string dir = @"T:\gt2\gtmenu\pics\GTMenuDatDecomp";
+            string dir = @"gt2\gtmenu\pics\GTMenuDatDecomp";
             if (!String.IsNullOrEmpty(dir))
             {
                 using (WaitDlg dlg = new WaitDlg("Checking GM Files"))

@@ -70,6 +70,10 @@ namespace GMCreator
         private static int g_fgImageCounter = 0;
         private static string g_debugSaveDir;
 
+#if DEBUG
+        public static string DebugOutputPath = Path.GetTempPath();
+#endif
+
         static public void Load(string fileDir)
         {
             string filePath = Path.Combine(fileDir, SETTINGS_FILE);
